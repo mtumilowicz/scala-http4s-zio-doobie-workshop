@@ -1,9 +1,9 @@
 package app.infrastructure.customer
 
-import app.domain.{Customer, CustomerId, CustomerRepository, CustomerRepositoryEnv, NewCustomerCommand}
+import app.domain.{Customer, CustomerId, CustomerRepository, CustomerRepositoryEnv}
 import zio._
 
-final private class CustomerInMemoryRepository(ref: Ref[Map[CustomerId, Customer]], counter: Ref[Int])
+final private class CustomerInMemoryRepository(ref: Ref[Map[CustomerId, Customer]])
   extends CustomerRepository {
 
   override def getAll: UIO[List[Customer]] = ref.get.map(_.values.toList)
@@ -14,11 +14,9 @@ final private class CustomerInMemoryRepository(ref: Ref[Map[CustomerId, Customer
 
   override def deleteAll: UIO[Unit] = ref.update(_.empty).unit
 
-  override def create(command: NewCustomerCommand): UIO[Customer] =
+  override def create(customer: Customer): UIO[Customer] =
     for {
-      newId <- counter.updateAndGet(_ + 1).map(_.toString).map(CustomerId)
-      customer   = command.toCustomer(newId)
-      _     <- ref.update(store => store + (newId -> customer))
+      _     <- ref.update(store => store + (customer.id -> customer))
     } yield customer
 }
 object CustomerInMemoryRepository {
@@ -27,7 +25,6 @@ object CustomerInMemoryRepository {
     ZLayer.fromEffect {
       for {
         ref     <- Ref.make(Map.empty[CustomerId, Customer])
-        counter <- Ref.make(0)
-      } yield new CustomerInMemoryRepository(ref, counter)
+      } yield new CustomerInMemoryRepository(ref)
     }
 }

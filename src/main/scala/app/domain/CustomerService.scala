@@ -1,32 +1,36 @@
 package app.domain
 
-import zio.{IO, URLayer, ZIO}
+import zio.{IO, Task, URLayer, ZIO}
 
 import java.io.IOException
-import zio.console.Console
 
-case class CustomerService(console: Console.Service, repository: CustomerRepository) {
+case class CustomerService(idService: IdService, repository: CustomerRepository) {
 
   def getAll: IO[IOException, List[Customer]] =
-    console.putStrLn("Business method") *> repository.getAll
+     repository.getAll
 
   def getById(id: CustomerId): IO[IOException, Option[Customer]] =
-    console.putStrLn("Business method") *> repository.getById(id)
+    repository.getById(id)
 
   def delete(id: CustomerId): IO[IOException, Unit] =
-    console.putStrLn("Business method") *> repository.delete(id)
+    repository.delete(id)
 
   def deleteAll: IO[IOException, Unit] =
-    console.putStrLn("Business method") *> repository.deleteAll
+    repository.deleteAll
 
-  def create(command: NewCustomerCommand): IO[IOException, Customer] =
-    console.putStrLn("Business method") *> repository.create(command)
+  def create(command: NewCustomerCommand): Task[Customer] = {
+    for {
+      id <- idService.generate()
+      customer = command.toCustomer(CustomerId(id))
+      created <- repository.create(customer)
+    } yield created
+  }
 
 }
 
 object CustomerService {
 
-  def create(command: NewCustomerCommand): ZIO[CustomerServiceEnv, IOException, Customer] = ZIO.accessM(_.get.create(command))
+  def create(command: NewCustomerCommand): ZIO[CustomerServiceEnv, Throwable, Customer] = ZIO.accessM(_.get.create(command))
 
   def getById(id: CustomerId): ZIO[CustomerServiceEnv, IOException, Option[Customer]] = ZIO.accessM(_.get.getById(id))
 
@@ -38,10 +42,10 @@ object CustomerService {
   val deleteAll: ZIO[CustomerServiceEnv, IOException, Unit] =
     ZIO.accessM(_.get.deleteAll)
 
-  val live: URLayer[CustomerRepositoryEnv with Console, CustomerServiceEnv] = {
+  val live: URLayer[CustomerRepositoryEnv with IdServiceEnv, CustomerServiceEnv] = {
     for {
-      console <- ZIO.service[Console.Service]
+      service <- ZIO.service[IdService]
       repository <- ZIO.service[CustomerRepository]
-    } yield new CustomerService(console, repository)
+    } yield CustomerService(service, repository)
   }.toLayer
 }

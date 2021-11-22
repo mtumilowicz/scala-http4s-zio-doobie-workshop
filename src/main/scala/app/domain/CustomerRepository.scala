@@ -6,6 +6,7 @@ import zio.blocking.Blocking
 import zio.{UIO, URLayer, ZLayer}
 
 trait CustomerRepository extends Serializable {
+
   def getAll: UIO[List[Customer]]
 
   def getById(id: CustomerId): UIO[Option[Customer]]
@@ -14,7 +15,7 @@ trait CustomerRepository extends Serializable {
 
   def deleteAll: UIO[Unit]
 
-  def create(command: NewCustomerCommand): UIO[Customer]
+  def create(customer: Customer): UIO[Customer]
 }
 
 object CustomerRepository {
