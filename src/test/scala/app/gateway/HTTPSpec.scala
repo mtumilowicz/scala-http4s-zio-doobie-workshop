@@ -28,10 +28,4 @@ object HTTPSpec {
                        )(expected => assertM(actual.as[A])(equalTo(expected)))
       statusResult = assert(actual.status)(equalTo(expectedStatus))
     } yield bodyResult && statusResult
-
-  def checkRequestRaw[R, A](
-    actual: RIO[R, Response[RIO[R, *]]],
-    expectedStatus: Status,
-    expectedBody: String
-  ): RIO[R, TestResult] = checkRequest(actual, expectedStatus, Some(expectedBody))
 }

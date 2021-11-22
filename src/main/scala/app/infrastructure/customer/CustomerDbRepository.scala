@@ -13,6 +13,8 @@ import zio._
 import zio.blocking.Blocking
 import zio.interop.catz._
 
+import java.util.UUID
+
 final private class CustomerDbRepository(xa: Transactor[Task]) extends CustomerRepository {
   import CustomerDbRepository.SQL
 
@@ -43,12 +45,12 @@ final private class CustomerDbRepository(xa: Transactor[Task]) extends CustomerR
       .unit
       .orDie
 
-  override def create(customer: Customer): UIO[Customer] =
+  override def create(command: NewCustomerCommand): UIO[Customer] =
     SQL
-      .create(customer)
-      .run
+      .create(command)
+      .withUniqueGeneratedKeys[String]("ID")
+      .map(id => command.toCustomer(CustomerId(id)))
       .transact(xa)
-      .map(_ => customer)
       .orDie
 }
 
@@ -99,9 +101,9 @@ object CustomerDbRepository {
   }
 
   object SQL {
-    def create(customer: Customer): Update0 = sql"""
+    def create(command: NewCustomerCommand): Update0 = sql"""
       INSERT INTO Customers (ID, NAME, LOCKED)
-      VALUES (${customer.id}, ${customer.name}, ${customer.locked})
+      VALUES (${UUID.randomUUID().toString}, ${command.name}, ${command.locked})
       """.update
 
     def get(id: CustomerId): Query0[Customer] = sql"""

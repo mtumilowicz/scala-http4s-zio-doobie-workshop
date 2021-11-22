@@ -28,8 +28,8 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
           app.run(req),
           Status.Created,
           Some(json"""{
-            "id": "1cd81a0e-014e-4189-ad0c-5a1ea331d12c",
-            "url": "/1cd81a0e-014e-4189-ad0c-5a1ea331d12c",
+            "id": "1",
+            "url": "/1",
             "name": "Test",
             "locked":false
           }""")
@@ -44,7 +44,8 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
           app.run(setupReq) *> app.run(setupReq) *> app.run(req),
           Status.Ok,
           Some(json"""[
-              {"id": "1cd81a0e-014e-4189-ad0c-5a1ea331d12c", "url": "/1cd81a0e-014e-4189-ad0c-5a1ea331d12c", "name": "Test", "locked":false}
+              {"id": "1", "url": "/1", "name": "Test", "locked":false},
+              {"id": "2", "url": "/2", "name": "Test", "locked":false}
             ]""")
         )
       },

@@ -14,7 +14,7 @@ trait CustomerRepository extends Serializable {
 
   def deleteAll: UIO[Unit]
 
-  def create(customer: Customer): UIO[Customer]
+  def create(command: NewCustomerCommand): UIO[Customer]
 }
 
 object CustomerRepository {

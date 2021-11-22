@@ -20,7 +20,7 @@ case class CustomerService(console: Console.Service, repository: CustomerReposit
     console.putStrLn("Business method") *> repository.deleteAll
 
   def create(command: NewCustomerCommand): IO[IOException, Customer] =
-    console.putStrLn("Business method") *> repository.create(Customer.createFrom(command))
+    console.putStrLn("Business method") *> repository.create(command)
 
 }
 
