@@ -14,6 +14,6 @@ object CustomerServiceProxy {
 
   def getById(id: CustomerId): URIO[CustomerServiceEnv, Option[Customer]] = ZIO.accessM(_.get.getById(id))
 
-  def delete(id: CustomerId): URIO[CustomerServiceEnv, CustomerId] = ZIO.accessM(_.get.delete(id))
+  def delete(id: CustomerId): URIO[CustomerServiceEnv, Option[CustomerId]] = ZIO.accessM(_.get.delete(id))
 
 }

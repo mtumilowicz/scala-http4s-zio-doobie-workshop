@@ -12,8 +12,8 @@ final private class CustomerInMemoryRepository(ref: Ref[Map[CustomerId, Customer
   override def getById(id: CustomerId): UIO[Option[Customer]] =
     ref.get.map(_.get(id))
 
-  override def delete(id: CustomerId): UIO[CustomerId] = {
-    ref.update(store => store - id).map(_ => id)
+  override def delete(id: CustomerId): UIO[Option[CustomerId]] = {
+    ref.update(store => store - id).map(_ => Some(id))
   }
 
   override def deleteAll: UIO[Unit] =

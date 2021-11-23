@@ -30,14 +30,14 @@ final private class CustomerDbRepository(xa: Transactor[Task]) extends CustomerR
       .transact(xa)
       .orDie
 
-  override def delete(id: CustomerId): UIO[CustomerId] =
+  override def delete(id: CustomerId): UIO[Option[CustomerId]] =
     SQL
       .delete(id)
       .run
       .transact(xa)
       .unit
       .orDie
-      .map(_ => id)
+      .map(_ => Some(id))
 
   override def deleteAll: UIO[Unit] =
     SQL.deleteAll.run

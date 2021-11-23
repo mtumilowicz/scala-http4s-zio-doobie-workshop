@@ -8,7 +8,7 @@ trait CustomerRepository extends Serializable {
 
   def getById(id: CustomerId): UIO[Option[Customer]]
 
-  def delete(id: CustomerId): UIO[CustomerId]
+  def delete(id: CustomerId): UIO[Option[CustomerId]]
 
   def deleteAll: UIO[Unit]
 
