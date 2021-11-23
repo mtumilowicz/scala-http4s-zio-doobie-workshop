@@ -1,5 +1,6 @@
-package app.infrastructure.config
+package app.infrastructure.config.http
 
+import app.infrastructure.config.{AppConfigEnv, HttpConfigEnv}
 import pureconfig._
 import pureconfig.generic.semiauto._
 import zio._

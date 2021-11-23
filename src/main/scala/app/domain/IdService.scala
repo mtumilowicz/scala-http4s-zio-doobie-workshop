@@ -1,15 +1,7 @@
 package app.domain
 
-import zio.{Task, URLayer, ZIO}
+import zio.Task
 
-case class IdService(provider: IdProvider) {
+case class IdService(provider: IdRepository) {
   def generate(): Task[String] = provider.get
-}
-
-object IdService {
-  val live: URLayer[IdProviderEnv, IdServiceEnv] = {
-    for {
-      provider <- ZIO.service[IdProvider]
-    } yield IdService(provider)
-  }.toLayer
 }

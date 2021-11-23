@@ -1,5 +1,6 @@
-package app.infrastructure.config
+package app.infrastructure.config.db
 
+import app.infrastructure.config.{AppConfigEnv, DatabaseConfigEnv}
 import pureconfig._
 import pureconfig.generic.semiauto._
 import zio._

@@ -16,15 +16,16 @@ final private class CustomerInMemoryRepository(ref: Ref[Map[CustomerId, Customer
 
   override def create(customer: Customer): UIO[Customer] =
     for {
-      _     <- ref.update(store => store + (customer.id -> customer))
+      _ <- ref.update(store => store + (customer.id -> customer))
     } yield customer
 }
+
 object CustomerInMemoryRepository {
 
   val live: URLayer[Any, CustomerRepositoryEnv] =
     ZLayer.fromEffect {
       for {
-        ref     <- Ref.make(Map.empty[CustomerId, Customer])
+        ref <- Ref.make(Map.empty[CustomerId, Customer])
       } yield new CustomerInMemoryRepository(ref)
     }
 }

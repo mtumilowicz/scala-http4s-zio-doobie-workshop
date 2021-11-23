@@ -1,15 +1,15 @@
 package app.infrastructure.id
 
-import app.domain.{IdProvider, IdProviderEnv}
+import app.domain.{IdRepository, IdProviderEnv}
 import zio.{Task, URLayer, ZLayer}
 
 import java.util.UUID
 
-private class UuidProvider extends IdProvider {
+private class UuidRepository extends IdRepository {
   override def get: Task[String] = Task.succeed(UUID.randomUUID().toString)
 }
 
-object UuidProvider {
+object UuidRepository {
   val live: URLayer[Any, IdProviderEnv] =
-    ZLayer.succeed(new UuidProvider())
+    ZLayer.succeed(new UuidRepository())
 }

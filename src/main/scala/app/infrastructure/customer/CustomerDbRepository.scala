@@ -1,9 +1,9 @@
 package app.infrastructure.customer
 
-import app.domain.CustomerRepository
-import cats.effect.Blocker
 import app.domain._
 import app.infrastructure.config._
+import _root_.app.infrastructure.config.db.DatabaseConfig
+import cats.effect.Blocker
 import doobie._
 import doobie.hikari._
 import doobie.implicits._
@@ -14,6 +14,7 @@ import zio.blocking.Blocking
 import zio.interop.catz._
 
 final private class CustomerDbRepository(xa: Transactor[Task]) extends CustomerRepository {
+
   import CustomerDbRepository.SQL
 
   override def getAll: UIO[List[Customer]] =
@@ -65,41 +66,50 @@ object CustomerDbRepository {
       }.unit
 
     def mkTransactor(
-      cfg: DatabaseConfig
-    ): ZManaged[Blocking, Throwable, HikariTransactor[Task]] =
+                      cfg: DatabaseConfig
+                    ): ZManaged[Blocking, Throwable, HikariTransactor[Task]] =
       ZIO.runtime[Blocking].toManaged_.flatMap { implicit rt =>
         for {
           transactEC <- Managed.succeed(
-                          rt.environment
-                            .get[Blocking.Service]
-                            .blockingExecutor
-                            .asEC
-                        )
-          connectEC   = rt.platform.executor.asEC
+            rt.environment
+              .get[Blocking.Service]
+              .blockingExecutor
+              .asEC
+          )
+          connectEC = rt.platform.executor.asEC
           transactor <- HikariTransactor
-                          .newHikariTransactor[Task](
-                            cfg.driver,
-                            cfg.url,
-                            cfg.user,
-                            cfg.password,
-                            connectEC,
-                            Blocker.liftExecutionContext(transactEC)
-                          )
-                          .toManaged
+            .newHikariTransactor[Task](
+              cfg.driver,
+              cfg.url,
+              cfg.user,
+              cfg.password,
+              connectEC,
+              Blocker.liftExecutionContext(transactEC)
+            )
+            .toManaged
         } yield transactor
       }
 
     ZLayer.fromManaged {
       for {
-        cfg        <- getDatabaseConfig.toManaged_
-        _          <- initDb(cfg).toManaged_
+        cfg <- getDatabaseConfig.toManaged_
+        _ <- initDb(cfg).toManaged_
         transactor <- mkTransactor(cfg)
       } yield new CustomerDbRepository(transactor)
     }
   }
 
   object SQL {
-    def create(customer: Customer): Update0 = sql"""
+    val getAll: Query0[Customer] = sql"""
+      SELECT * FROM Customers
+      """.query[Customer]
+    val deleteAll: Update0 =
+      sql"""
+      DELETE from Customers
+      """.update
+
+    def create(customer: Customer): Update0 =
+      sql"""
       INSERT INTO Customers (ID, NAME, LOCKED)
       VALUES (${customer.id}, ${customer.name}, ${customer.locked})
       """.update
@@ -108,16 +118,9 @@ object CustomerDbRepository {
       SELECT * FROM Customers WHERE ID = ${id.value}
       """.query[Customer]
 
-    val getAll: Query0[Customer] = sql"""
-      SELECT * FROM Customers
-      """.query[Customer]
-
-    def delete(id: CustomerId): Update0 = sql"""
+    def delete(id: CustomerId): Update0 =
+      sql"""
       DELETE from Customers WHERE ID = ${id.value}
-      """.update
-
-    val deleteAll: Update0 = sql"""
-      DELETE from Customers
       """.update
 
   }

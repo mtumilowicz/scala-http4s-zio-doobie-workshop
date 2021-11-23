@@ -1,8 +1,8 @@
 package app
 
-import cats.effect._
 import app.infrastructure.config._
-import app.gateway.CustomerController
+import _root_.app.gateway.CustomerController
+import cats.effect._
 import fs2.Stream.Compiler._
 import org.http4s.HttpApp
 import org.http4s.implicits._
@@ -20,11 +20,11 @@ object Main extends App {
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ZExitCode] = {
     val prog =
       for {
-        cfg    <- getAppConfig
-        _      <- logging.log.info(s"Starting with $cfg")
+        cfg <- getAppConfig
+        _ <- logging.log.info(s"Starting with $cfg")
         httpApp = Router[AppTask](
-                    "/customers" -> CustomerController.routes(s"${cfg.http.baseUrl}/customers")
-                  ).orNotFound
+          "/customers" -> CustomerController.routes(s"${cfg.http.baseUrl}/customers")
+        ).orNotFound
 
         _ <- runHttp(httpApp, cfg.http.port)
       } yield ZExitCode.success
@@ -35,9 +35,9 @@ object Main extends App {
   }
 
   def runHttp[R <: Clock](
-    httpApp: HttpApp[RIO[R, *]],
-    port: Int
-  ): ZIO[R, Throwable, Unit] = {
+                           httpApp: HttpApp[RIO[R, *]],
+                           port: Int
+                         ): ZIO[R, Throwable, Unit] = {
     type Task[A] = RIO[R, A]
     ZIO.runtime[R].flatMap { implicit rts =>
       BlazeServerBuilder

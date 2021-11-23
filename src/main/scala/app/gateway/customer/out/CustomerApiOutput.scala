@@ -11,7 +11,7 @@ object CustomerApiOutput {
   def apply(
              basePath: String,
              customer: Customer
-  ): CustomerApiOutput =
+           ): CustomerApiOutput =
     CustomerApiOutput(
       customer.id.value,
       s"$basePath/${customer.id.value}",

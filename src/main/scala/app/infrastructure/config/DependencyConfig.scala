@@ -1,6 +1,10 @@
 package app.infrastructure.config
 
 import app.domain._
+import app.infrastructure.config.customer.CustomerConfig
+import app.infrastructure.config.db.DatabaseConfig
+import app.infrastructure.config.http.HttpConfig
+import app.infrastructure.config.id.IdConfig
 import zio.blocking.Blocking
 import zio.console.Console
 import zio.logging.Logging
@@ -26,22 +30,22 @@ object DependencyConfig {
   object live {
 
     val core: ZLayer[Blocking, Throwable, CoreEnv] =
-      Blocking.any ++ AppConfig.live ++ Slf4jLogger.make((_, msg) => msg) ++ Console.live++ IdProvider.live
+      Blocking.any ++ AppConfig.live ++ Slf4jLogger.make((_, msg) => msg) ++ Console.live ++ IdConfig.uuidRepository
 
     val gateway: ZLayer[CoreEnv, Throwable, GatewayEnv] =
       HttpConfig.fromAppConfig ++ DatabaseConfig.fromAppConfig ++ ZLayer.identity
 
     val repository: ZLayer[GatewayEnv, Throwable, RepositoryEnv] =
-      CustomerRepository.live ++ IdService.live ++ ZLayer.identity
+      CustomerConfig.dbRepository ++ IdConfig.service ++ ZLayer.identity
 
     val service: ZLayer[RepositoryEnv, Throwable, ServiceEnv] =
-      CustomerService.live ++ ZLayer.identity
+      CustomerConfig.service ++ ZLayer.identity
 
     val appLayer: ZLayer[Blocking, Throwable, AppEnv] =
       core >>> gateway >>> repository >>> service
   }
 
   object inMemory {
-    val appLayer: URLayer[Any, CustomerServiceEnv] = ((IdProvider.deterministic >>> IdService.live) ++ CustomerRepository.inMemory) >>> CustomerService.live
+    val appLayer: URLayer[Any, CustomerServiceEnv] = ((IdConfig.deterministicRepository >>> IdConfig.service) ++ CustomerConfig.inMemoryRepository) >>> CustomerConfig.service
   }
 }

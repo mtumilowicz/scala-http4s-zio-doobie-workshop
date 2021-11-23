@@ -1,8 +1,9 @@
 package app.gateway
 
-import app.domain.{CustomerId, CustomerService, CustomerServiceEnv}
+import app.domain.{CustomerId, CustomerServiceEnv}
 import app.gateway.customer.in.NewCustomerApiInput
 import app.gateway.customer.out.CustomerApiOutput
+import app.infrastructure.config.customer.CustomerServiceProxy
 import io.circe.{Decoder, Encoder}
 import org.http4s._
 import org.http4s.circe._
@@ -25,16 +26,16 @@ object CustomerController {
     HttpRoutes.of[CustomerTask] {
       case GET -> Root / id =>
         for {
-          customer     <- CustomerService.getById(CustomerId(id))
+          customer <- CustomerServiceProxy.getById(CustomerId(id))
           response <- customer.fold(NotFound())(x => Ok(CustomerApiOutput(rootUri, x)))
         } yield response
 
       case GET -> Root =>
-        Ok(CustomerService.getAll.map(_.map(CustomerApiOutput(rootUri, _))))
+        Ok(CustomerServiceProxy.getAll.map(_.map(CustomerApiOutput(rootUri, _))))
 
-      case req @ POST -> Root =>
+      case req@POST -> Root =>
         req.decode[NewCustomerApiInput] { input =>
-          CustomerService
+          CustomerServiceProxy
             .create(input.toDomain)
             .map(CustomerApiOutput(rootUri, _))
             .flatMap(Created(_))
@@ -42,14 +43,14 @@ object CustomerController {
 
       case DELETE -> Root / id =>
         for {
-          item   <- CustomerService.getById(CustomerId(id))
+          item <- CustomerServiceProxy.getById(CustomerId(id))
           result <- item
-                      .map(x => CustomerService.delete(x.id))
-                      .fold(NotFound())(_.flatMap(Ok(_)))
+            .map(x => CustomerServiceProxy.delete(x.id))
+            .fold(NotFound())(_.flatMap(Ok(_)))
         } yield result
 
       case DELETE -> Root =>
-        CustomerService.deleteAll *> Ok()
+        CustomerServiceProxy.deleteAll *> Ok()
     }
   }
 }

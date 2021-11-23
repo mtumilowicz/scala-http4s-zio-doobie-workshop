@@ -1,10 +1,12 @@
 package app.infrastructure
 
+import app.infrastructure.config.db.DatabaseConfig
+import app.infrastructure.config.http.HttpConfig
 import zio._
 
 package object config {
-  type AppConfigEnv      = Has[AppConfig]
-  type HttpConfigEnv     = Has[HttpConfig]
+  type AppConfigEnv = Has[AppConfig]
+  type HttpConfigEnv = Has[HttpConfig]
   type DatabaseConfigEnv = Has[DatabaseConfig]
 
   val getAppConfig: URIO[AppConfigEnv, AppConfig] =
