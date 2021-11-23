@@ -42,12 +42,8 @@ object CustomerController {
         }
 
       case DELETE -> Root / id =>
-        for {
-          item <- CustomerServiceProxy.getById(CustomerId(id))
-          result <- item
-            .map(x => CustomerServiceProxy.delete(x.id))
-            .fold(NotFound())(_.flatMap(_.fold(NotFound())(id => Ok(id.toString))))
-        } yield result
+        CustomerServiceProxy.delete(CustomerId(id))
+          .flatMap(_.fold(NotFound())(_ => Ok(id)))
 
       case DELETE -> Root =>
         CustomerServiceProxy.deleteAll *> Ok()
