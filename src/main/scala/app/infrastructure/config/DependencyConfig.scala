@@ -14,35 +14,47 @@ import zio.{URLayer, ZLayer}
 object DependencyConfig {
 
   type CoreEnv =
-    AppConfigEnv with Logging with Blocking with Console with IdProviderEnv
+    AppConfigEnv with Logging with Blocking with Console
 
   type GatewayEnv =
     CoreEnv with HttpConfigEnv with DatabaseConfigEnv
 
-  type RepositoryEnv =
-    GatewayEnv with CustomerRepositoryEnv with IdServiceEnv
+  type InternalRepositoryEnv =
+    GatewayEnv with IdProviderEnv
 
-  type ServiceEnv =
-    RepositoryEnv with CustomerServiceEnv
+  type InternalServiceEnv =
+    InternalRepositoryEnv with IdServiceEnv
 
-  type AppEnv = ServiceEnv
+  type ApiRepositoryEnv =
+    InternalServiceEnv with CustomerRepositoryEnv
+
+  type ApiServiceEnv =
+    ApiRepositoryEnv with CustomerServiceEnv
+
+  type AppEnv = ApiServiceEnv
 
   object live {
 
     val core: ZLayer[Blocking, Throwable, CoreEnv] =
-      Blocking.any ++ AppConfig.live ++ Slf4jLogger.make((_, msg) => msg) ++ Console.live ++ IdConfig.uuidRepository
+      Blocking.any ++ AppConfig.live ++ Slf4jLogger.make((_, msg) => msg) ++ Console.live
 
     val gateway: ZLayer[CoreEnv, Throwable, GatewayEnv] =
       HttpConfig.fromAppConfig ++ DatabaseConfig.fromAppConfig ++ ZLayer.identity
 
-    val repository: ZLayer[GatewayEnv, Throwable, RepositoryEnv] =
+    val internalRepository: ZLayer[GatewayEnv, Throwable, InternalRepositoryEnv] =
+      IdConfig.uuidRepository ++ ZLayer.identity
+
+    val internalService: ZLayer[InternalRepositoryEnv, Throwable, InternalServiceEnv] =
+      IdConfig.service ++ ZLayer.identity
+
+    val apiRepository: ZLayer[InternalServiceEnv, Throwable, ApiRepositoryEnv] =
       CustomerConfig.dbRepository ++ IdConfig.service ++ ZLayer.identity
 
-    val service: ZLayer[RepositoryEnv, Throwable, ServiceEnv] =
+    val apiService: ZLayer[ApiRepositoryEnv, Throwable, ApiServiceEnv] =
       CustomerConfig.service ++ ZLayer.identity
 
     val appLayer: ZLayer[Blocking, Throwable, AppEnv] =
-      core >>> gateway >>> repository >>> service
+      core >>> gateway >>> internalRepository >>> internalService >>> apiRepository >>> apiService
   }
 
   object inMemory {
