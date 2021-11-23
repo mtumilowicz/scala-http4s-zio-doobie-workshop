@@ -1,21 +1,19 @@
 package app.domain
 
-import zio.{IO, Task}
-
-import java.io.IOException
+import zio.{Task, UIO}
 
 case class CustomerService(idService: IdService, repository: CustomerRepository) {
 
-  def getAll: IO[IOException, List[Customer]] =
+  def getAll: UIO[List[Customer]] =
     repository.getAll
 
-  def getById(id: CustomerId): IO[IOException, Option[Customer]] =
+  def getById(id: CustomerId): UIO[Option[Customer]] =
     repository.getById(id)
 
-  def delete(id: CustomerId): IO[IOException, Unit] =
+  def delete(id: CustomerId): UIO[Unit] =
     repository.delete(id)
 
-  def deleteAll: IO[IOException, Unit] =
+  def deleteAll: UIO[Unit] =
     repository.deleteAll
 
   def create(command: NewCustomerCommand): Task[Customer] = {
