@@ -10,9 +10,9 @@ final private class CustomerInMemoryRepository(ref: Ref[Map[CustomerId, Customer
 
   override def getById(id: CustomerId): UIO[Option[Customer]] = ref.get.map(_.get(id))
 
-  override def delete(id: CustomerId): UIO[Unit] = ref.update(store => store - id).unit
+  override def delete(id: CustomerId): UIO[Unit] = ref.update(store => store - id)
 
-  override def deleteAll: UIO[Unit] = ref.update(_.empty).unit
+  override def deleteAll: UIO[Unit] = ref.update(_.empty)
 
   override def create(customer: Customer): UIO[Customer] =
     for {
