@@ -1,4 +1,4 @@
-package app.gateway
+package app.gateway.customer
 
 import app.domain.{CustomerId, CustomerServiceEnv}
 import app.gateway.customer.in.NewCustomerApiInput

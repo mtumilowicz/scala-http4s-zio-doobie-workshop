@@ -1,8 +1,8 @@
 package app.infrastructure.customer
 
+import _root_.app.infrastructure.config.db.DatabaseConfig
 import app.domain._
 import app.infrastructure.config._
-import _root_.app.infrastructure.config.db.DatabaseConfig
 import cats.effect.Blocker
 import doobie._
 import doobie.hikari._

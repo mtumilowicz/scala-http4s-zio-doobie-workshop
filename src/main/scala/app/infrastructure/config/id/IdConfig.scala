@@ -1,6 +1,6 @@
 package app.infrastructure.config.id
 
-import app.domain.{IdRepository, IdProviderEnv, IdService, IdServiceEnv}
+import app.domain.{IdProviderEnv, IdRepository, IdService, IdServiceEnv}
 import app.infrastructure.id.{DeterministicIdRepository, UuidRepository}
 import zio.{URLayer, ZIO}
 

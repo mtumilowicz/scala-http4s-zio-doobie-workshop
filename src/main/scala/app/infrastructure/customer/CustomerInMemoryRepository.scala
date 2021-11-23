@@ -9,13 +9,13 @@ final private class CustomerInMemoryRepository(ref: Ref[Map[CustomerId, Customer
   override def getAll: UIO[List[Customer]] =
     ref.get.map(_.values.toList)
 
-  override def getById(id: CustomerId): UIO[Option[Customer]] =
-    ref.get.map(_.get(id))
-
   override def delete(id: CustomerId): UIO[Option[CustomerId]] =
     getById(id)
-    .flatMap(_ => ref.update(store => store - id))
-    .map(_ => Some(id))
+      .flatMap(_ => ref.update(store => store - id))
+      .map(_ => Some(id))
+
+  override def getById(id: CustomerId): UIO[Option[Customer]] =
+    ref.get.map(_.get(id))
 
   override def deleteAll: UIO[Unit] =
     ref.update(_.empty)

@@ -1,7 +1,7 @@
 package app
 
+import app.gateway.customer.CustomerController
 import app.infrastructure.config._
-import _root_.app.gateway.CustomerController
 import cats.effect._
 import fs2.Stream.Compiler._
 import org.http4s.HttpApp

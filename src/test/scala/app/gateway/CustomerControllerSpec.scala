@@ -2,13 +2,14 @@ package app.gateway
 
 import app.domain.CustomerServiceEnv
 import app.gateway.HTTPSpec._
+import app.gateway.customer.CustomerController
 import app.gateway.customer.out.CustomerApiOutput
 import app.infrastructure.config.DependencyConfig
 import io.circe.Decoder
 import io.circe.literal._
+import org.http4s._
 import org.http4s.circe._
 import org.http4s.implicits._
-import org.http4s._
 import zio._
 import zio.interop.catz._
 import zio.test._
