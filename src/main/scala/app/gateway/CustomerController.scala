@@ -24,9 +24,9 @@ object CustomerController {
     implicit def circeJsonEncoder[A: Encoder]: EntityEncoder[CustomerTask, A] = jsonEncoderOf[CustomerTask, A]
 
     HttpRoutes.of[CustomerTask] {
-      case GET -> Root / id =>
+      case GET -> Root / UUIDVar(id) =>
         for {
-          customer <- CustomerServiceProxy.getById(CustomerId(id))
+          customer <- CustomerServiceProxy.getById(CustomerId(id.toString))
           response <- customer.fold(NotFound())(x => Ok(CustomerApiOutput(rootUri, x)))
         } yield response
 
