@@ -6,13 +6,17 @@ import zio._
 final private class CustomerInMemoryRepository(ref: Ref[Map[CustomerId, Customer]])
   extends CustomerRepository {
 
-  override def getAll: UIO[List[Customer]] = ref.get.map(_.values.toList)
+  override def getAll: UIO[List[Customer]] =
+    ref.get.map(_.values.toList)
 
-  override def getById(id: CustomerId): UIO[Option[Customer]] = ref.get.map(_.get(id))
+  override def getById(id: CustomerId): UIO[Option[Customer]] =
+    ref.get.map(_.get(id))
 
-  override def delete(id: CustomerId): UIO[Unit] = ref.update(store => store - id)
+  override def delete(id: CustomerId): UIO[Unit] =
+    ref.update(store => store - id)
 
-  override def deleteAll: UIO[Unit] = ref.update(_.empty)
+  override def deleteAll: UIO[Unit] =
+    ref.update(_.empty)
 
   override def create(customer: Customer): UIO[Customer] =
     for {
