@@ -10,7 +10,7 @@ case class CustomerService(idService: IdService, repository: CustomerRepository)
   def getById(id: CustomerId): UIO[Option[Customer]] =
     repository.getById(id)
 
-  def delete(id: CustomerId): UIO[Unit] =
+  def delete(id: CustomerId): UIO[CustomerId] =
     repository.delete(id)
 
   def deleteAll: UIO[Unit] =

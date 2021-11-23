@@ -46,7 +46,7 @@ object CustomerController {
           item <- CustomerServiceProxy.getById(CustomerId(id))
           result <- item
             .map(x => CustomerServiceProxy.delete(x.id))
-            .fold(NotFound())(_.flatMap(Ok(_)))
+            .fold(NotFound())(_.flatMap(id => Ok(id.value)))
         } yield result
 
       case DELETE -> Root =>
