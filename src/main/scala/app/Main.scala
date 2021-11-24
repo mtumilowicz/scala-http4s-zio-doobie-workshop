@@ -23,7 +23,7 @@ object Main extends App {
         cfg <- getAppConfig
         _ <- logging.log.info(s"Starting with $cfg")
         httpApp = Router[AppTask](
-          "/customers" -> CustomerController.routes(s"${cfg.http.baseUrl}/customers")
+          "/customers" -> new CustomerController().routes(s"${cfg.http.baseUrl}/customers")
         ).orNotFound
 
         _ <- runHttp(httpApp, cfg.http.port)

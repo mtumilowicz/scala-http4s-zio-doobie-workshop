@@ -6,8 +6,9 @@ import zio._
 final private class CustomerInMemoryRepository(ref: Ref[Map[CustomerId, Customer]])
   extends CustomerRepository {
 
-  override def getAll: UIO[List[Customer]] =
-    ref.get.map(_.values.toList)
+  override def getAll: fs2.Stream[Task, Customer] =
+    fs2.Stream.eval(ref.get.map(_.values.toList))
+      .flatMap(fs2.Stream.emits(_))
 
   override def delete(id: CustomerId): UIO[Option[CustomerId]] =
     getById(id)

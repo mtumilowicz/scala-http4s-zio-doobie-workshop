@@ -18,7 +18,7 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
 
   type CustomerTask[A] = RIO[CustomerServiceEnv, A]
 
-  val app = CustomerController.routes[CustomerServiceEnv]("").orNotFound
+  val app = new CustomerController[CustomerServiceEnv]().routes("").orNotFound
 
   override def spec =
     suite("CustomerService")(

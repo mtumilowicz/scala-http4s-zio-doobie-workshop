@@ -1,12 +1,12 @@
 package app.infrastructure.config.customer
 
 import app.domain.{Customer, CustomerId, CustomerServiceEnv, NewCustomerCommand}
-import zio.{RIO, URIO, ZIO}
+import zio._
 
 object CustomerServiceProxy {
 
-  val getAll: URIO[CustomerServiceEnv, List[Customer]] =
-    ZIO.accessM(_.get.getAll)
+  val getAll: RIO[CustomerServiceEnv, fs2.Stream[Task, Customer]] =
+    RIO.access(_.get.getAll)
 
   val deleteAll: URIO[CustomerServiceEnv, Unit] =
     ZIO.accessM(_.get.deleteAll)

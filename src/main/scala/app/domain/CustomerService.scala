@@ -4,7 +4,7 @@ import zio.{Task, UIO}
 
 case class CustomerService(idService: IdService, repository: CustomerRepository) {
 
-  def getAll: UIO[List[Customer]] =
+  def getAll: fs2.Stream[Task, Customer] =
     repository.getAll
 
   def getById(id: CustomerId): UIO[Option[Customer]] =

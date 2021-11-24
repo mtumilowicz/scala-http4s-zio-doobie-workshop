@@ -17,11 +17,10 @@ final private class CustomerDbRepository(xa: Transactor[Task]) extends CustomerR
 
   import CustomerDbRepository.SQL
 
-  override def getAll: UIO[List[Customer]] =
+  override def getAll: fs2.Stream[Task, Customer] =
     SQL.getAll
-      .to[List]
+      .stream
       .transact(xa)
-      .orDie
 
   override def getById(id: CustomerId): UIO[Option[Customer]] =
     SQL
