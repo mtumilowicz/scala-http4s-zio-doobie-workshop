@@ -1,6 +1,6 @@
 package app.gateway
 
-import app.domain.CustomerServiceEnv
+import app.domain._
 import app.gateway.HTTPSpec._
 import app.gateway.customer.CustomerController
 import app.gateway.customer.out.CustomerApiOutput

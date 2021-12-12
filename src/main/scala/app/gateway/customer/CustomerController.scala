@@ -1,7 +1,8 @@
 package app.gateway.customer
 
-import app.domain.{Customer, CustomerId, CustomerServiceEnv}
 import app.gateway.customer.in.NewCustomerApiInput
+import app.domain._
+import app.domain.customer._
 import app.gateway.customer.out.CustomerApiOutput
 import app.infrastructure.config.customer.CustomerServiceProxy
 import io.circe.syntax.EncoderOps

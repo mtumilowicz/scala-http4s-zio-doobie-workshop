@@ -2,6 +2,7 @@ package app.infrastructure.customer
 
 import _root_.app.infrastructure.config.db.DatabaseConfig
 import app.domain._
+import app.domain.customer.{Customer, CustomerId, CustomerRepository}
 import app.infrastructure.config._
 import cats.effect.Blocker
 import doobie._

@@ -1,6 +1,6 @@
 package app.gateway.customer.in
 
-import app.domain.NewCustomerCommand
+import app.domain.customer.NewCustomerCommand
 import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
 

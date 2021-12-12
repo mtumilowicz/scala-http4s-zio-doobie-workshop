@@ -13,44 +13,44 @@ import zio.{URLayer, ZLayer}
 
 object DependencyConfig {
 
-  type CoreEnv =
+  type Core =
     AppConfigEnv with Logging with Blocking with Console
 
-  type GatewayEnv =
-    CoreEnv with HttpConfigEnv with DatabaseConfigEnv
+  type Gateway =
+    Core with HttpConfigEnv with DatabaseConfigEnv
 
-  type InternalRepositoryEnv =
-    GatewayEnv with IdProviderEnv
+  type InternalRepository =
+    Gateway with InternalRepositoryEnv
 
-  type InternalServiceEnv =
-    InternalRepositoryEnv with IdServiceEnv
+  type InternalService =
+    InternalRepository with InternalServiceEnv
 
-  type ApiRepositoryEnv =
-    InternalServiceEnv with CustomerRepositoryEnv
+  type ApiRepository =
+    InternalService with ApiRepositoryEnv
 
-  type ApiServiceEnv =
-    ApiRepositoryEnv with CustomerServiceEnv
+  type ApiService =
+    ApiRepository with ApiServiceEnv
 
-  type AppEnv = ApiServiceEnv
+  type AppEnv = ApiService
 
   object live {
 
-    val core: ZLayer[Blocking, Throwable, CoreEnv] =
+    val core: ZLayer[Blocking, Throwable, Core] =
       Blocking.any ++ AppConfig.live ++ Slf4jLogger.make((_, msg) => msg) ++ Console.live
 
-    val gateway: ZLayer[CoreEnv, Throwable, GatewayEnv] =
+    val gateway: ZLayer[Core, Throwable, Gateway] =
       HttpConfig.fromAppConfig ++ DatabaseConfig.fromAppConfig ++ ZLayer.identity
 
-    val internalRepository: ZLayer[GatewayEnv, Throwable, InternalRepositoryEnv] =
+    val internalRepository: ZLayer[Gateway, Throwable, InternalRepository] =
       IdConfig.uuidRepository ++ ZLayer.identity
 
-    val internalService: ZLayer[InternalRepositoryEnv, Throwable, InternalServiceEnv] =
+    val internalService: ZLayer[InternalRepository, Throwable, InternalService] =
       IdConfig.service ++ ZLayer.identity
 
-    val apiRepository: ZLayer[InternalServiceEnv, Throwable, ApiRepositoryEnv] =
+    val apiRepository: ZLayer[InternalService, Throwable, ApiRepository] =
       CustomerConfig.dbRepository ++ IdConfig.service ++ ZLayer.identity
 
-    val apiService: ZLayer[ApiRepositoryEnv, Throwable, ApiServiceEnv] =
+    val apiService: ZLayer[ApiRepository, Throwable, ApiService] =
       CustomerConfig.service ++ ZLayer.identity
 
     val appLayer: ZLayer[Blocking, Throwable, AppEnv] =
