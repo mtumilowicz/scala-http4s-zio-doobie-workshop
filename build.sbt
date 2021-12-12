@@ -25,7 +25,7 @@ inThisBuild(
     ),
     licenses := Seq(
       "MIT" -> url(
-        s"https://github.com/mtumilowicz/http4s-zio-playground/blob/master/LICENSE"
+        s"https://github.com/mtumilowicz/scala-http4s-zio-fs2-workshop/blob/master/LICENSE"
       )
     ),
     semanticdbEnabled := true,
@@ -42,7 +42,7 @@ lazy val root = (project in file("."))
     dockerExposedPorts in Docker := Seq(8080),
     dockerUsername in Docker := Some("mtumilowicz"),
     libraryDependencies ++= Dependencies.App,
-    name := "http4s-zio-playground",
+    name := "scala-http4s-zio-fs2-workshop",
     scalacOptions in ThisBuild := Options.scalacOptions(scalaVersion.value, isSnapshot.value),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
