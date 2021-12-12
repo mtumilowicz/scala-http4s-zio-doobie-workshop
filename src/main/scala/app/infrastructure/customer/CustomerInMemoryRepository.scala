@@ -1,7 +1,6 @@
 package app.infrastructure.customer
 
-import app.domain.CustomerRepositoryEnv
-import app.domain.customer.{Customer, CustomerId, CustomerRepository}
+import app.domain.customer._
 import zio._
 
 final private class CustomerInMemoryRepository(ref: Ref[Map[CustomerId, Customer]])

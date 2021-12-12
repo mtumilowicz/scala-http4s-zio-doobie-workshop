@@ -1,7 +1,6 @@
 package app.gateway.customer
 
 import app.gateway.customer.in.NewCustomerApiInput
-import app.domain._
 import app.domain.customer._
 import app.gateway.customer.out.CustomerApiOutput
 import app.infrastructure.config.customer.CustomerServiceProxy

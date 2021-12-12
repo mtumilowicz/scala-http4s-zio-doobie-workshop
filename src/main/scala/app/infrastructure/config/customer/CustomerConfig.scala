@@ -1,7 +1,6 @@
 package app.infrastructure.config.customer
 
-import app.domain._
-import app.domain.customer.{CustomerRepository, CustomerService, IdService}
+import app.domain.customer._
 import app.infrastructure.config.DatabaseConfigEnv
 import app.infrastructure.customer.{CustomerDbRepository, CustomerInMemoryRepository}
 import zio.blocking.Blocking

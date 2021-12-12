@@ -1,6 +1,7 @@
 package app.infrastructure.config
 
 import app.domain._
+import app.domain.customer.CustomerServiceEnv
 import app.infrastructure.config.customer.CustomerConfig
 import app.infrastructure.config.db.DatabaseConfig
 import app.infrastructure.config.http.HttpConfig
