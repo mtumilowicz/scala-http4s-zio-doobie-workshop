@@ -11,8 +11,8 @@ final private class CustomerInMemoryRepository(ref: Ref[Map[CustomerId, Customer
       .flatMap(fs2.Stream.emits(_))
 
   override def delete(id: CustomerId): UIO[Option[CustomerId]] =
-    getById(id)
-      .flatMap(_ => ref.update(store => store - id))
+    getById(id) *>
+      ref.update(store => store - id)
       .map(_ => Some(id))
 
   override def getById(id: CustomerId): UIO[Option[Customer]] =
