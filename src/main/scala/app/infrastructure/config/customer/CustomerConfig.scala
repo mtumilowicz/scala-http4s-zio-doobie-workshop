@@ -1,6 +1,8 @@
 package app.infrastructure.config.customer
 
+import app.domain.{ApiRepositoryEnv, InternalServiceEnv}
 import app.domain.customer._
+import app.domain.id.IdService
 import app.infrastructure.config.DatabaseConfigEnv
 import app.infrastructure.customer.{CustomerDbRepository, CustomerInMemoryRepository}
 import zio.blocking.Blocking
@@ -14,7 +16,7 @@ object CustomerConfig {
   val dbRepository: ZLayer[Blocking with DatabaseConfigEnv, Throwable, CustomerRepositoryEnv] =
     CustomerDbRepository.live
 
-  val service: URLayer[CustomerRepositoryEnv with IdServiceEnv, CustomerServiceEnv] = {
+  val service: URLayer[InternalServiceEnv with ApiRepositoryEnv, CustomerServiceEnv] = {
     for {
       service <- ZIO.service[IdService]
       repository <- ZIO.service[CustomerRepository]

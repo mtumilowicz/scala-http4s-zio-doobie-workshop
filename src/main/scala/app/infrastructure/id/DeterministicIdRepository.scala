@@ -1,6 +1,6 @@
 package app.infrastructure.id
 
-import app.domain.customer._
+import app.domain.id.{IdProviderEnv, IdRepository}
 import zio.{Ref, Task, URLayer, ZLayer}
 
 private class DeterministicIdRepository(counter: Ref[Int]) extends IdRepository {

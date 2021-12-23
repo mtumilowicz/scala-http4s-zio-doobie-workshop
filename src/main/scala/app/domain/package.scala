@@ -1,6 +1,7 @@
 package app
 
-import app.domain.customer._
+import app.domain.customer.{CustomerRepositoryEnv, CustomerServiceEnv}
+import app.domain.id.{IdProviderEnv, IdServiceEnv}
 
 package object domain {
   type InternalRepositoryEnv = IdProviderEnv

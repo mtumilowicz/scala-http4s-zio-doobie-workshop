@@ -1,6 +1,6 @@
 package app.infrastructure.id
 
-import app.domain.customer._
+import app.domain.id.{IdProviderEnv, IdRepository}
 import zio.{Task, URLayer, ZLayer}
 
 import java.util.UUID

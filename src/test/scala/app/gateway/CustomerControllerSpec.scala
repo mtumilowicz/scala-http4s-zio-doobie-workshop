@@ -21,7 +21,7 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
   val app = new CustomerController[CustomerServiceEnv]().routes("").orNotFound
 
   override def spec =
-    suite("CustomerService")(
+    suite("CustomerController")(
       testM("should create new customer") {
         val req = request[CustomerTask](Method.POST, "/")
           .withEntity(json"""{"name": "Test"}""")

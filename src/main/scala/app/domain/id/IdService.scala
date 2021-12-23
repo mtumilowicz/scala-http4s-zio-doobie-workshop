@@ -1,4 +1,4 @@
-package app.domain.customer
+package app.domain.id
 
 import zio.Task
 

@@ -1,7 +1,6 @@
 package app.infrastructure.config
 
 import app.domain._
-import app.domain.customer.CustomerServiceEnv
 import app.infrastructure.config.customer.CustomerConfig
 import app.infrastructure.config.db.DatabaseConfig
 import app.infrastructure.config.http.HttpConfig
@@ -10,7 +9,7 @@ import zio.blocking.Blocking
 import zio.console.Console
 import zio.logging.Logging
 import zio.logging.slf4j.Slf4jLogger
-import zio.{URLayer, ZLayer}
+import zio.{ULayer, URLayer, ZLayer}
 
 object DependencyConfig {
 
@@ -59,6 +58,10 @@ object DependencyConfig {
   }
 
   object inMemory {
-    val appLayer: URLayer[Any, CustomerServiceEnv] = ((IdConfig.deterministicRepository >>> IdConfig.service) ++ CustomerConfig.inMemoryRepository) >>> CustomerConfig.service
+    private val internalRepository: ULayer[InternalRepositoryEnv] = IdConfig.deterministicRepository
+    private val internalService: URLayer[InternalRepositoryEnv, InternalServiceEnv] = IdConfig.service
+    private val apiRepository: ULayer[ApiRepositoryEnv] = CustomerConfig.inMemoryRepository
+    private val apiService: URLayer[InternalServiceEnv with ApiRepositoryEnv, ApiServiceEnv] = CustomerConfig.service
+    val appLayer: ULayer[ApiServiceEnv] = ((internalRepository >>> internalService) ++ apiRepository) >>> apiService
   }
 }

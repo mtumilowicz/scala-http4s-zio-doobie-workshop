@@ -1,5 +1,6 @@
 package app.domain.customer
 
+import app.domain.id.IdService
 import zio.{Task, UIO}
 
 case class CustomerService(idService: IdService, repository: CustomerRepository) {
