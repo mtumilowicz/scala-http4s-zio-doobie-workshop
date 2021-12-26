@@ -74,6 +74,15 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
           Some(json"""[]""")
         )
       },
+      testM("should delete non existing customer by id") {
+        val deleteReq =
+          (id: String) => request[CustomerTask](Method.DELETE, s"/$id")
+        checkRequest(
+          app.run(deleteReq("1")),
+          Status.NotFound,
+          Option.empty[String]
+        )
+      },
       testM("should delete all customers") {
         val setupReq =
           request[CustomerTask](Method.POST, "/")
