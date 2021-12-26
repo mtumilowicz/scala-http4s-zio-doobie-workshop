@@ -30,13 +30,15 @@
 ## preface
 
 ## introduction
-* functional programs do not interact with the external world directly, because that involves
-partiality, non-determinism and side-effects
-    * instead, functional programs construct and return data structures, which describe (or model)
-    interaction with the real world.
-    * instead of writing functions that interact with the outside world, we write functions that describe interactions with the outside world, which are executed only at a specific point in our application, (usually called the end of the world) for example the main function
-        * What is this aforementioned end of the world? Well, the end of the world is simply a specific point in our application where the functional world ends, and where the descriptions of interactions with the outside world are being run, usually as late as possible, preferably at the very edge of our program which is its main function
-* Immutable data structures that model procedural effects are called functional effects
+* functional programs do not interact with the external world directly
+    * it involves partiality, non-determinism and side-effects
+    * instead, describe (or model) interaction with the real world
+        * by introducing appropriate data structures
+    * functions that describe interactions with the outside world are executed only at a specific point in our application
+        * called the end of the (pure functional) world
+            * example: the main function
+* effects: immutable data structures that model procedural effects
+
 * Interpreting (also called running or executing) is not functional, because it may be partial, non-deterministic, and impure
     * In an ideal application, however, interpretation only needs to happen once: in the application's main function.
     * The rest of the application can be purely functional.
