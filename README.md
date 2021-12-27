@@ -52,7 +52,7 @@
 * is a library for asynchronous and concurrent programming that is based on pure functional programming
 
 ### general
-* basic building block: `ZIO [-R, +E, +A]`
+* basic building block: `ZIO[-R, +E, +A]`
     * something like `R => Either[E, A]`
         * isomorphism
             * `def either: ZIO[R, Nothing, Either[E, A]]`
@@ -63,20 +63,27 @@
             * a REST client
             * a configuration object
             * other service
-    * a better Future
+    * note that just by looking at the signature of a function, we can tell:
+        * if it has external dependencies
+        * if it can fail or not
+            * what type of errors it can fail
+        * if it can finish successfully or not
+            * what the type of data is that returns when finishing
+    * a better `Future`
         * referentially transparent
             * doesn't produce effects - it describe effects
         * lazy
-            * Future is already running: `Future { Thread.sleep(2_000); 1 }`
+            * when created - `Future` is already running
+                * example: `Future { Thread.sleep(2_000); 1 }`
                 * therefore it needs execution context when creating
-            * effect value is actually a tree
+            * effect value is just a tree
                 ```
                 val effect =
                   ZIO(callApi(url)).flatMap { result =>
                     saveCache(result)
                   }.eventually // if fail retry
                 ```
-                translated into tree (blueprint)
+                is translated into tree (blueprint)
                 ```
                 lazy val effect =
                   Fold(
@@ -88,13 +95,8 @@
                       success => EffectTotal(() => success)
                     )
                   )
-    * type aliases
-        * `Task[+A] = ZIO[Any, Throwable, A]` // need anything
-        * `UIO[+A] = ZIO[Any, Nothing, A]` // cannot fail
-        * `RIO[-R, +A] = ZIO[R, Throwable, A]`
-        * `IO[+E, +A] = ZIO[Any, E, A]`
-        * `URIO[-R, +A] = ZIO[R, Nothing, A]`
-    * it's composable
+    * resource-safe equivalent: `ZManaged[-R, +E, +A]`
+    * is extremely composable
         ```
         val managedData = Managed.make(open(url))(close(_))
 
@@ -126,27 +128,47 @@
           }
         } // timeout all: .timeout(10.seconds)
         ```
-* zio.App
-    * why we need to call the ZIO#exitCode method, which returns an effect of the type ZIO[Console With Random, Nothing, ExitCode]as follows:
+    * type aliases
+        * `Task[+A] = ZIO[Any, Throwable, A]` // need anything
+        * `UIO[+A] = ZIO[Any, Nothing, A]` // cannot fail
+        * `RIO[-R, +A] = ZIO[R, Throwable, A]`
+        * `IO[+E, +A] = ZIO[Any, E, A]`
+        * `URIO[-R, +A] = ZIO[R, Nothing, A]`
 
-      If the original effect ends successfully, ExitCode.success is returned.
-      If the original effect fails, the error is printed by console and ExitCode.failure is returned
+* `zio.App`
+    * entry point for a purely-functional application on the JVM
     * zio runtime system
-      * unsafeRun(effect)
-      * (R, ZIO[R, E, A]) -> zio runtime system -> Either[E,A]
-      * responsibilities
-        * execute every step of the blueprint
-        * handle unexpected errors
-        * spawn concurrent fibers
-        * cooperatively yield to other fibers
-        * capture execution & stack traces
-        * ensure finalizers are run appropriately
-        * handle asynchronous callbacks
-* just by looking at the signature of a function, we can tell:
-  If it has external dependencies.
-  If it can fail or not, and also with what type of errors it can fail.
-  If it can finish successfully or not, and also what the type of data is that returns when finishing.
+        * `def unsafeRun[E, A](zio: => ZIO[R, E, A]): A`
+        * responsibilities
+            * execute every step of the blueprint
+            * handle unexpected errors
+            * spawn concurrent fibers
+            * cooperatively yield to other fibers
+            * capture execution & stack traces
+            * ensure finalizers are run appropriately
+            * handle asynchronous callbacks
+    * method to override: `def run(args: List[String]): URIO[ZEnv, ExitCode]`
+        * errors have to be fully handled
+        * use `ZIO.exitCode` to map ZIO into `URIO[ZEnv, ExitCode]`
+            * if the original effect ends successfully: `ExitCode.success` is returned
+            * if the original effect fails
+                * the error is printed by console
+                * and `ExitCode.failure` is returned
+    * example
+        ```
+         object MyApp extends App {
 
+           final def run(args: List[String]) =
+             program.exitCode
+
+           def program =
+             for {
+               _ <- putStrLn("Hello! What is your name?")
+               n <- getStrLn
+               _ <- putStrLn("Hello, " + n + ", good to meet you!")
+             } yield ()
+         }
+        ```
 * useful operators
     * map(_ => 5) is a method: .as(5)
     * * another operator to combine two effects sequentially, and it is the <*> operator (which by the way is equivalent to the ZIO#zip method)
