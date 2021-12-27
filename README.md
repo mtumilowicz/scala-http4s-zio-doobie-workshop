@@ -37,67 +37,95 @@
     * functions that describe interactions with the outside world are executed only at a specific point in our application
         * called the end of the (pure functional) world
             * example: the main function
+        * rest of the application can be purely functional
 * effects: immutable data structures that model procedural effects
-
-* Interpreting (also called running or executing) is not functional, because it may be partial, non-deterministic, and impure
-    * In an ideal application, however, interpretation only needs to happen once: in the application's main function.
-    * The rest of the application can be purely functional.
+    * side effect: function doing something other than just returning a value
+    * example: `val sayHello: Unit = println("Hello!")`
+        * from value perspective, any different than `val unit = ()`
+            * all it does is side effect
+            * not referentially transparent
+    * effect system: is how we manage side effects - by describing them not doing them
+    * effects are good, side-effects are bugs
+    * effects are descriptions so we can run them again
 
 ## zio
 * is a library for asynchronous and concurrent programming that is based on pure functional programming
 
 ### general
-* it's composable
-  ```
-  val managedData = Managed.make(open(url))(close(_))
+* basic building block: `ZIO [-R, +E, +A]`
+    * something like `R => Either[E, A]`
+        * isomorphism
+            * `def either: ZIO[R, Nothing, Either[E, A]]`
+            * `def absolve(zio: ZIO[R, E, Either[E, A]]): ZIO[R, E, A]`
+    * `R` stands for context needed to run
+        * example
+            * a connection to a database
+            * a REST client
+            * a configuration object
+            * other service
+    * a better Future
+        * referentially transparent
+            * doesn't produce effects - it describe effects
+        * lazy
+            * Future is already running: `Future { Thread.sleep(2_000); 1 }`
+                * therefore it needs execution context when creating
+            * effect value is actually a tree
+                ```
+                val effect =
+                  ZIO(callApi(url)).flatMap { result =>
+                    saveCache(result)
+                  }.eventually // if fail retry
+                ```
+                translated into tree (blueprint)
+                ```
+                lazy val effect =
+                  Fold(
+                    FlatMap( // common operators as a case classes
+                      EffectPartial(() => callApi(url)),
+                       result => saveCache(res lt)
+                      ),
+                      error => effect,
+                      success => EffectTotal(() => success)
+                    )
+                  )
+    * type aliases
+        * `Task[+A] = ZIO[Any, Throwable, A]` // need anything
+        * `UIO[+A] = ZIO[Any, Nothing, A]` // cannot fail
+        * `RIO[-R, +A] = ZIO[R, Throwable, A]`
+        * `IO[+E, +A] = ZIO[Any, E, A]`
+        * `URIO[-R, +A] = ZIO[R, Nothing, A]`
+    * it's composable
+        ```
+        val managedData = Managed.make(open(url))(close(_))
 
-  managedData.use { data =>
-    searchBreadth(data)
-  }
-  ```
-  support multiple urls
-  ```
-  ZIO.foreach(urls) { url => // parallel: ZIO.foreachPar(urls); with limit: ZIO.foreachParN(10)(urls)
-    val managedData = Managed.make(open(url))(close(_))
+        managedData.use { data =>
+          searchBreadth(data)
+        }
+        ```
+        support multiple urls
+        ```
+        ZIO.foreach(urls) { url => // parallel: ZIO.foreachPar(urls); with limit: ZIO.foreachParN(10)(urls)
+          val managedData = Managed.make(open(url))(close(_))
 
-    managedData.use { data =>
-      searchBreadth(data)
-    }
-  }
-  ```
-  retry: at most 100 times
-  ```
-  val policy = Schedule.recurs(100) // exponential backoff: && Schedule.exponential(10.millis)
+          managedData.use { data =>
+            searchBreadth(data)
+          }
+        }
+        ```
+        retry: at most 100 times
+        ```
+        val policy = Schedule.recurs(100) // exponential backoff: && Schedule.exponential(10.millis)
 
-  ZIO.foreach(urls) { url => // parallel: ZIO.foreachPar(urls); with limit: ZIO.foreachParN(10)(urls)
-    val managedData = Managed.make(open(url))(close(_))
+        ZIO.foreach(urls) { url => // parallel: ZIO.foreachPar(urls); with limit: ZIO.foreachParN(10)(urls)
+          val managedData = Managed.make(open(url))(close(_))
 
-    val robustData = managedData.retry(policy) // timeout: .timeoutFail(30.seconds)
+          val robustData = managedData.retry(policy) // timeout: .timeoutFail(30.seconds)
 
-    robustData.use { data =>
-      searchBreadth(data) // use other search and take faster: .race(searchDepth(data))
-    }
-  } // timeout all: .timeout(10.seconds)
-  ```
-* effect value is actually a tree
-  ```
-  val effect =
-    ZIO(callApi(url)).flatMap { result =>
-      saveCache(result)
-    }.eventually // if fail retry
-  ```
-  translated into tree (blueprint)
-  ```
-  lazy val effect =
-    Fold(
-      FlatMap( // common operators as a case classes
-        EffectPartial(() => callApi(url)),
-         result => saveCache(res lt)
-        ),
-        error => effect,
-        success => EffectTotal(() => success)
-      )
-    )
+          robustData.use { data =>
+            searchBreadth(data) // use other search and take faster: .race(searchDepth(data))
+          }
+        } // timeout all: .timeout(10.seconds)
+        ```
 * zio.App
     * why we need to call the ZIO#exitCode method, which returns an effect of the type ZIO[Console With Random, Nothing, ExitCode]as follows:
 
@@ -114,44 +142,6 @@
         * capture execution & stack traces
         * ensure finalizers are run appropriately
         * handle asynchronous callbacks
-* basic building block: `ZIO [-R, +E, +A]`
-        * R => Either[E, A]
-        * Needs a context of type R to run (this context can be anything: a connection to a database, a REST client , a configuration object, etc.)
-        * It may fail with an error of type E or it may complete successfully, returning a value of type A.
-        * Common aliases for the ZIO data type
-            * Task[+A] = ZIO[Any, Throwable, A]
-                * Doesn’t require an environment to run
-                * Can fail with a Throwable
-                * Can succeed with an A
-            * UIO[+A] = ZIO[Any, Nothing, A]
-            * RIO[-R, +A] = ZIO[R, Throwable, A]
-            * IO[+E, +A] = ZIO[Any, E, A]
-            * URIO[-R, +A] = ZIO[R, Nothing, A]
-        * ZIO[-R, +E, +A] is something function: R => Either[E, A]
-          * lazy
-          * like R => Either[E, A]
-            * def either: ZIO[R, Nothing, Either[E, A]]
-            * def absolve(zio: ZIO[R, E, Either[E, A]]): ZIO[R, E, A]
-          * doesn't produce effects - it describe effects
-            * side effect: function doing something other than just returning a value
-              * val sayHello: Unit = println("Hello!")
-                * from value perspective, any different than val unit = ()
-                * all it does is side effect
-            * effect system: is how we manage this side effect by describing them not doing them
-            * effects are good, side-effects are bugs
-          * effects are descriptions so we can run them again
-            * but if that function returns F[A] instead, that result has not already been fully evaluated, the A is still inside F[A] waiting to be evaluated
-          * a better future (referentially transparent)
-          * type aliases
-            * Task[+A] = ZIO[Any, Throwable, A] // need anything
-            * UIO[+A] = ZIO[Any, Nothing, A] // cannot fail
-            * RIO[-R, +A] = ZIO[R, Throwable, A]
-            * IO[+E, +A] = ZIO[Any, E, A]
-              * in ZIO: def provider(r: R): IO[E, A]
-                * give dependency, any you don't need one anymore (therefore IO)
-            * URIO[-R, +A] = ZIO[R, Nothing, A]
-          * use ZIO for dependency injection
-          * use IO and UIO for typed errors
 * just by looking at the signature of a function, we can tell:
   If it has external dependencies.
   If it can fail or not, and also with what type of errors it can fail.
@@ -170,6 +160,7 @@
         * using the ZIO#orDieWith method, which returns a new effect that cannot fail and, if it does fail, that would mean that there is some serious defect in our application (for example that some of our predefined words are empty when they should not be) and therefore it should fail immediately with the provided exception
         * ZIO#orDie method, which returns an effect that never fails (we already know that if there were any failure, it would actually be a defect and our application should fail immediately).
         * By the way, ZIO#orDie is very similar to ZIO#orDieWith, but it can only be used with effects that fail with a Throwable.
+    * monad transformers equivalent
 
 ### errors
 * Cause has several variations which encode all the cases:
