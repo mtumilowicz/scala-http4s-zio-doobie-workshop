@@ -392,7 +392,11 @@
 * https://zio.dev/version-1.x/howto/mock-services
 
 ## http4s
+* https://http4s.org/v0.23/service/
 
 ## fs2
+* https://fs2.io/#/guide
+* https://fs2.io/#/documentation
 
 ## doobie
+* https://tpolecat.github.io/doobie/docs/01-Introduction.html
