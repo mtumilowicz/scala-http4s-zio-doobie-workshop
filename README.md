@@ -1,31 +1,32 @@
 # scala-http4s-zio-fs2-workshop
 
-* https://medium.com/@ghostdogpr/wrapping-impure-code-with-zio-9265c219e2e
-* https://scalac.io/blog/introduction-to-programming-with-zio-functional-effects/
-* https://degoes.net/
-* https://scalac.io/wp-content/uploads/2021/04/Scalac_Ebook_Mastering_modularity_in_ZIO_updated..pdf
-* [A Tour of ZIO](https://www.youtube.com/watch?v=TWdC7DhvD8M)
-* [I Can Has? (And So Can You!) — Exploring ZIO's Has Type](https://www.youtube.com/watch?v=1e0C0jUzup4)
-* [Structuring Services in Scala with ZIO and ZLayer](https://www.youtube.com/watch?v=PaogLRrYo64)
-* [ZIO WORLD - ZLayer by Kit Langton](https://www.youtube.com/watch?v=B3bAcU2-TGI)
-* [Getting started with ZIO](https://www.youtube.com/watch?v=6A1SA5Be9qw)
-* [ZIO WORLD - ZIO Runtime System by John A. De Goes](https://www.youtube.com/watch?v=OFFrw5aJzG4)
-* [1st Zymposium - Building an App with ZIO](https://www.youtube.com/watch?v=XUwynbWUlhg)
-* [The ZIO of the Future by John De Goes](https://www.youtube.com/watch?v=u3pgyEiu9eU)
-* [ZIO WORLD - ZHub by Adam Fraser](https://www.youtube.com/watch?v=v7Ontn7jZt8)
-* [Zymposium - Optics](https://www.youtube.com/watch?v=-km5ohYhJa4)
-* [Zymposium — Type-Level Sets](https://www.youtube.com/watch?v=N_it0qwk7_U)
-* [Zymposium — Path Dependent Types](https://www.youtube.com/watch?v=w2rcHCqdn-o)
-* [ZIO from Scratch — Part 1](https://www.youtube.com/watch?v=wsTIcHxJMeQ)
-* [ZIO from Scratch — Part 2](https://www.youtube.com/watch?v=g8Tuqldu2AE)
-* [ZIO from Scratch — Part 3](https://www.youtube.com/watch?v=0IU9mGO_9Rw)
-* [ZIO from Scratch — Part 4](https://www.youtube.com/watch?v=95Vk-vVgnOg)
-* [ZIO from Scratch — Part 5](https://www.youtube.com/watch?v=uzDs4X42w2k)
-* https://blog.rockthejvm.com/structuring-services-with-zio-zlayer/
-* https://blog.softwaremill.com/zio-environment-meets-constructor-based-dependency-injection-6a13de6e000
-* https://alvinalexander.com/scala/what-effects-effectful-mean-in-functional-programming/
-* https://zio.dev/version-1.x/overview/
-
+* references
+    * https://medium.com/@ghostdogpr/wrapping-impure-code-with-zio-9265c219e2e
+    * https://scalac.io/blog/introduction-to-programming-with-zio-functional-effects/
+    * https://degoes.net/
+    * https://scalac.io/wp-content/uploads/2021/04/Scalac_Ebook_Mastering_modularity_in_ZIO_updated..pdf
+    * [A Tour of ZIO](https://www.youtube.com/watch?v=TWdC7DhvD8M)
+    * [I Can Has? (And So Can You!) — Exploring ZIO's Has Type](https://www.youtube.com/watch?v=1e0C0jUzup4)
+    * [Structuring Services in Scala with ZIO and ZLayer](https://www.youtube.com/watch?v=PaogLRrYo64)
+    * [ZIO WORLD - ZLayer by Kit Langton](https://www.youtube.com/watch?v=B3bAcU2-TGI)
+    * [Getting started with ZIO](https://www.youtube.com/watch?v=6A1SA5Be9qw)
+    * [ZIO WORLD - ZIO Runtime System by John A. De Goes](https://www.youtube.com/watch?v=OFFrw5aJzG4)
+    * [1st Zymposium - Building an App with ZIO](https://www.youtube.com/watch?v=XUwynbWUlhg)
+    * [The ZIO of the Future by John De Goes](https://www.youtube.com/watch?v=u3pgyEiu9eU)
+    * [ZIO WORLD - ZHub by Adam Fraser](https://www.youtube.com/watch?v=v7Ontn7jZt8)
+    * [Zymposium - Optics](https://www.youtube.com/watch?v=-km5ohYhJa4)
+    * [Zymposium — Type-Level Sets](https://www.youtube.com/watch?v=N_it0qwk7_U)
+    * [Zymposium — Path Dependent Types](https://www.youtube.com/watch?v=w2rcHCqdn-o)
+    * [ZIO from Scratch — Part 1](https://www.youtube.com/watch?v=wsTIcHxJMeQ)
+    * [ZIO from Scratch — Part 2](https://www.youtube.com/watch?v=g8Tuqldu2AE)
+    * [ZIO from Scratch — Part 3](https://www.youtube.com/watch?v=0IU9mGO_9Rw)
+    * [ZIO from Scratch — Part 4](https://www.youtube.com/watch?v=95Vk-vVgnOg)
+    * [ZIO from Scratch — Part 5](https://www.youtube.com/watch?v=uzDs4X42w2k)
+    * https://blog.rockthejvm.com/structuring-services-with-zio-zlayer/
+    * https://blog.softwaremill.com/zio-environment-meets-constructor-based-dependency-injection-6a13de6e000
+    * https://alvinalexander.com/scala/what-effects-effectful-mean-in-functional-programming/
+    * https://zio.dev/version-1.x/overview/
+    * https://aleksandarskrbic.github.io/functional-effects-with-zio/
 
 ## preface
 
@@ -38,19 +39,22 @@
         * called the end of the (pure functional) world
             * example: the main function
         * rest of the application can be purely functional
-* effects: immutable data structures that model procedural effects
-    * side effect: function doing something other than just returning a value
-    * example: `val sayHello: Unit = println("Hello!")`
-        * from value perspective, any different than `val unit = ()`
-            * all it does is side effect
-            * not referentially transparent
+* effects
+    * immutable data structures that model procedural effects
+    * used to model some common operations or sequence of operations, like database interaction, RPC calls,
+    WebSocket connections, etc.
+    * side effect context: function doing something other than just returning a value
+        * effects are good, side-effects are bugs
+        * example: `val sayHello: Unit = println("Hello!")`
+            * from value perspective, any different than `val unit = ()`
+                * all it does is side effect
+                * not referentially transparent
     * effect system: is how we manage side effects - by describing them not doing them
-    * effects are good, side-effects are bugs
     * effects are descriptions so we can run them again
 
 ## zio
 * is a library for asynchronous and concurrent programming that is based on pure functional programming
-
+* provides everything that is necessary for building any modern, highly-concurrent application
 ### general
 * basic building block: `ZIO[-R, +E, +A]`
     * something like `R => Either[E, A]`
@@ -96,7 +100,8 @@
                     )
                   )
     * resource-safe equivalent: `ZManaged[-R, +E, +A]`
-    * is extremely composable
+        * its constructor `make` takes 2 functions: one to create the object, and one to release it
+    * is composable
         ```
         val managedData = Managed.make(open(url))(close(_))
 
@@ -169,45 +174,64 @@
              } yield ()
          }
         ```
-* useful operators
-    * map(_ => 5) is a method: .as(5)
-    * * another operator to combine two effects sequentially, and it is the <*> operator (which by the way is equivalent to the ZIO#zip method)
-          * (putStrLn(message) <*> getStrLn).map(_._2)
-          * This operator, like ZIO#flatMap, combines the results of two effects, with the difference that the second effect does not need the result of the first to be executed
-          * The *> operator (equivalent to the ZIO#zipRight method) does exactly what we did in the previous version, but in a much more condensed way.
-    * Then we are using a new <> operator (which is equivalent to the ZIO#orElse method), which also allows us to combine two effects sequentially, but in a somewhat different way than <*>
-        * If the first effect is successful (in this case: if the player’s name is valid), the second effect is not executed.
+* useful alias operators
+    * `.as(...)` is equivalent of `map(_ => ...)`
+    * `<*>` is equivalent to the `zip`
+    * `*>` is equivalent of `flatMap(_ => ...)`
+    * `>>=` is equivalent of `flatMap`
+    * `<>` is equivalent of `orElse`
+        * if the first effect is successful - the second effect is not executed
         * If the first effect fails (in this case: if the player’s name is invalid), the second effect is executed (in this case: an error message is displayed and then getName is called again).
-    * .orDieWith(_ => new Error("Boom!"))
-        * using the ZIO#orDieWith method, which returns a new effect that cannot fail and, if it does fail, that would mean that there is some serious defect in our application (for example that some of our predefined words are empty when they should not be) and therefore it should fail immediately with the provided exception
-        * ZIO#orDie method, which returns an effect that never fails (we already know that if there were any failure, it would actually be a defect and our application should fail immediately).
-        * By the way, ZIO#orDie is very similar to ZIO#orDieWith, but it can only be used with effects that fail with a Throwable.
-    * monad transformers equivalent
+* monad transformers equivalent
+    * for `Option`
+        *
+    * for `Either`
+    * example
+        ```
+        val maybeId: IO[Option[Nothing], String] = ZIO.fromOption(Some("abc123"))
+        def getUser(userId: String): IO[Throwable, Option[User]] = ???
+        def getTeam(teamId: String): IO[Throwable, Team] = ???
+
+
+        val result: IO[Throwable, Option[(User, Team)]] = (for {
+          id   <- maybeId
+          user <- getUser(id).some // ZIO[R, E, Option[B]] -> ZIO[R, Option[E], B]
+          team <- getTeam(user.teamId).asSomeError // ZIO[R, E, B] -> ZIO[R, Option[E], B]
+        } yield (user, team)).optional // ZIO[R, Option[E], B] -> ZIO[R, E, Option[B]]
+        ```
 
 ### errors
-* Cause has several variations which encode all the cases:
-  * Fail[+E](value: E) contains the cause of expected failure of type E.
-    * expected errors
-    * errors you would potentially want to recover from
-  * Die(value: Throwable) contains the cause of a defect or in other words, an unexpected failure of type Throwable. If we have a bug in our code and something throws an unexpected exception, that information would be described inside a Die.
-    * unexpected errors
-    * errors you can't recover from in a sensible way (because you didn't expect them)
-* If you’re using ZIO, you should not throw exceptions within IO.succeed or map/flatMap,
-because it will result in the fiber being killed.
-    * Instead, you should use IO.effect: this effect constructor will catch exceptions for
-    you and return an IO[Throwable, A] (aka Task)
-    * You can then use mapError, catchAll or other combinators to deal with this exception.
-* You can also use effectAsync in combination with a Scala Future, but there’s even an easier way for that: IO.fromFuture
-* zio.catchAllCause()
-* Cause
-* sealed trait ConfigError
-  * final case class IOError(message: String) extends ConfigError
-  * final case class ParseError(message: String) extends ConfigError
-* die error channel
-
-### resources
-* ZIO has a data type that encapsulate initialization and closing logic: Managed
-    * Its constructor make takes 2 functions: one to create the object, and one to release it
+* `IO[E, A]` is polymorphic in values of type E and we can work with any error type
+    * there is a lot of information that is not inside an arbitrary `E` value
+        * unexpected exceptions or defects
+        * stack and execution traces
+        * cause of fiber interruptions
+        * etc
+* `Cause[E]` is a description of a full story of failure, which is included in an `Exit.Failure`
+    * has several variations
+        * `Fail[+E](value: E)`
+            * expected errors
+            * errors you would potentially want to recover from
+        * `Die(value: Throwable)`
+            * unexpected errors (defects)
+            * errors you can't recover from in a sensible way (because you didn't expect them)
+        * others
+* handling
+    * `catchAll`
+    * `catchSome`
+* you should not throw exceptions within `IO.succeed` or `map/flatMap` or any other non-effectful method
+    * it will result in the fiber being killed
+    * instead
+        * `def effect[A](effect: => A): Task[A]`
+            * imports a synchronous side-effect into a pure ZIO value
+            * translates any thrown exceptions into typed failed effects (`ZIO.fail`)
+        * `def mapEffect[B](f: A => B)(implicit ev: E <:< Throwable): RIO[R, B]`
+            * translates any thrown exceptions into typed failed effects (`ZIO.fail`)
+* `.orDie`
+    * returns an effect that never fails
+        * if there were any failure, it would actually be a defect and our application should fail immediately
+    * `.orDieWith(_ => new Error("Boom!"))`
+        * returns a new effect that cannot fail and, if it does fail, that would mean that there is some serious defect
 
 ### concurrency
 * effectAsync
