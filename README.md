@@ -27,6 +27,8 @@
     * https://alvinalexander.com/scala/what-effects-effectful-mean-in-functional-programming/
     * https://zio.dev/version-1.x/overview/
     * https://aleksandarskrbic.github.io/functional-effects-with-zio/
+    * https://blog.rockthejvm.com/zio-fibers/
+    * https://blog.rockthejvm.com/cats-effect-fibers/
 
 ## preface
 
@@ -234,57 +236,77 @@
         * returns a new effect that cannot fail and, if it does fail, that would mean that there is some serious defect
 
 ### concurrency
-* effectAsync
-  * if you’re using ZIO, you should not throw exceptions within IO.succeed or map/flatMap, because it will result in the fiber being killed
-  * Instead, you should use IO.effect: this effect constructor will catch exceptions for you and return an IO[Throwable, A]
-  * You can then use mapError, catchAll or other combinators to deal with this exception.
-  * It is a good rule of thumb to use this whenever you’re not sure if the code you’re calling might throw exceptions (or if you’re sure it will, of course).
-  * Now, how about some legacy code which not only throws exceptions, but also blocks the current thread until completion
-    * If you run it within a regular IO, you will block a thread from your application’s main thread pool and potentially cause thread starvation
-    * Instead, it is better to run such task inside another thread pool dedicated to blocking tasks
-    * ZIO has a solution for that, which is to wrap your code within effectBlocking
-  * CompletableFuture, which itself has a handle method taking a callback that will be executed once the API calls returns
-    * How to deal with such a function with ZIO? By wrapping it with effectAsync
-    * It gives you a function that you can call when the callback is triggered, and that will complete the effect with either a failure or a value
-  * def effectAsync[R, E, A]( register: (ZIO[R, E, A] => Unit) => Any): ZIO[R, E, A]
-    * def succeed[A](a: => A): ZIO[Any, Nothing, A]
+* fiber
+    * using fibers directly can be tricky
+        * use higher-level methods, such as `raceWith`, `zipPar`, and so forth
+    * usage
+        * example
+            ```
+             for { // fork means run in the background; join means wait for a result
+               fiber <- subtask.fork
+               // Do stuff...
+               a <- fiber.join
+             } yield a
+            ```
+    * in ZIO: `def fork: URIO[R, Fiber.Runtime[E, A]]`
+        * forks this effect into its own separate fiber
+            * returning the fiber immediately
+        * new fiber is attached to the parent fiber's scope
+            * when the parent fiber terminates, the child fiber will be terminated as well ("auto supervision")
+        * creating the fiber itself — and running the IO on a separate thread — is an effect (therefore the return type)
+    * in `Fiber`: `def join: IO[E, A]`
+        * semantically block but never block underlying threads
+    * in `Fiber`: `def interrupt: UIO[Exit[E, A]]`
+        * if the fiber already succeeded: `Exit.Success[A]` otherwise `Exit.Failure[Cause.Interrupt]`
+        * unlike interrupting a thread, interrupting a fiber is an easy operation
+            * it simply tells the `Executor` that the fiber must not be scheduled anymore
+    * is the closest analogy to `Future`
+        * if we see fiber it is probably doing something or already evaluated
+             * if it is not doing active work and can't do active work - will be garbage collected
+                   * you don't have to take care of explicitly shutting them down
+        * no start method, as soon as fiber is created it is started as well
+    * it’s up to the ZIO runtime to schedule fibers for execution (on the internal JVM thread pool)
+        * ZIO executes fibers using an Executor (abstraction over a thread pool)
 * blocks the current thread until completion? If you run it within a regular IO, you will block a thread from your application’s main thread pool and potentially cause thread starvation
     * ZIO has a solution for that, which is to wrap your code within effectBlocking
     * The return type is ZIO[Blocking, Throwable, A], which means that it requires a “blocking environment” (= the thread pool to use) and that it catches exceptions
     * By the way, never wrap Thread.sleep, use non-blocking IO.sleep instead.
-* https://blog.rockthejvm.com/zio-fibers/
-* https://blog.rockthejvm.com/cats-effect-fibers/
-* in ZIO world, Fiber is the closest analogy to Future
-  * if we see fiber it is probably doing something or already evaluated
-  * two core methods are: join and interrupt
-    * no start method, as soon as fiber is created it is started as well
-* in ZIO: def fork: ZIO[R, Nothing, Fiber[E, A]]
-* in Fiber: def join: ZIO[Any, E, A]
-  * fork means run in the background; join means wait for a result
-* semantically block but never block underlying threads
-* ZIO.foreachPar(ids)(getUserById)
-  * automatically interrupt others if one fails
-* getDataFromEastCoast.race(getDataFromWestCoast)
-  * returns first
-  * automatically interrupt the loser
+
+* useful methods
+    * def effectAsync[R, E, A](register: (ZIO[R, E, A] => Unit) => Any, blockingOn: List[Fiber.Id] = Nil): ZIO[R, E, A]
+        * used for asynchronous side-effect with a callback-based API
+        * more specialized equivalents: `fromCompletableFuture`, `fromFuture`
+        * example
+            ```
+            def send(client: AsyncClient): Task[Unit] =
+              IO.effectAsync[Any, Throwable, Unit] { cb =>
+                client
+                  .sendMessage(msg)
+                  .handle[Unit]((_, err) => {
+                    err match {
+                      case null => cb(IO.unit)
+                      case ex   => cb(IO.fail(ex))
+                    }
+                  })
+                ()
+              }
+            ```
+    * `zio.blocking.effectBlocking[A](effect: => A): RIO[Blocking, A]`
+        * used for legacy code which not only throws exceptions, but also blocks the current thread
+        * example: synchronous socket/file reads
+        * `Blocking`: thread pool that can be used for performing blocking operations
+    * `ZIO.foreachPar(ids)(getUserById)`
+        * automatically interrupt others if one fails
+    * `getDataFromEastCoast.race(getDataFromWestCoast)`
+        * returns first
+        * automatically interrupt the loser
+    * use `IO.sleep` (never wrap `Thread.sleep`)
 * provided primitives
   * Ref - functional equivalent of atomic ref
   * Promise - single value communication
   * Queue - multiple value communication
   * Semaphore - control level of concurrency
   * Schedule - manage repeats and retries
-* fibers
-  * if it is not doing active work and can't do active work - will be garbage collected
-  * you don't have to take care of explicitly shutting them down
-  * it’s up to the ZIO runtime to schedule these fibers for execution (on the internal JVM thread pool)
-  * Moreover, ZIO executes fibers using an Executor, which is a sort of abstraction over a thread pool
-  * ZIO fibers don’t block any thread during the waiting associated with the call of the join method
-  * If the fiber already succeeded with its value when interrupted, then ZIO returns an instance of Exit.Success[A], an Exit.Failure[Cause.Interrupt] otherwise
-    * Unlike interrupting a thread, interrupting a fiber is an easy operation
-    * Interrupting a fiber simply tells the Executor that the fiber must not be scheduled anymore
-    * As the name suggests, an uninterruptible fiber will execute till the end even if it receives an interrupt signal.
-  * Notice that we’re measuring threads versus CPU cores and fibers versus GB of heap
-  * But since creating the fiber itself — and running the IO on a separate thread — is an effect, the returned fiber is wrapped in another IO instance
 
 ### dependency injection
 * In a type-safe, resource-safe, potentially concurrent way, with principled error handling, without reflection or classpath scanning.
