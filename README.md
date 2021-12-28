@@ -295,6 +295,8 @@
         * used for legacy code which not only throws exceptions, but also blocks the current thread
         * example: synchronous socket/file reads
         * `Blocking`: thread pool that can be used for performing blocking operations
+            * by default, ZIO is asynchronous and all effects will be executed on a default primary thread pool
+            which is optimized for asynchronous operations
     * `ZIO.foreachPar(ids)(getUserById)`
         * automatically interrupt others if one fails
     * `getDataFromEastCoast.race(getDataFromWestCoast)`
@@ -305,129 +307,87 @@
   * Ref - functional equivalent of atomic ref
   * Promise - single value communication
   * Queue - multiple value communication
+  * Hub - broadcast values to many subscribers
   * Semaphore - control level of concurrency
   * Schedule - manage repeats and retries
 
 ### dependency injection
-* In a type-safe, resource-safe, potentially concurrent way, with principled error handling, without reflection or classpath scanning.
-* suppose we don't have Has
-  * zio = ZIO[Int with String, ...]
-  * zio.provide(12) // compile type error
-  * if we define trait HasInt { value: Int }
-    * we could do ZIO[HasInt with HasString]
-    * and then zio.provide( new HasInt with HasString { ... } )
-* environment
-    * type ZEnv = Clock with Console with System with Random with Blocking
-        * We can see that ZEnv is just an alias that encompasses all of the standard modules provided by ZIO
-    * Has[A] represents a dependency on a service A.
-    * Has[A] and a Has[B] can be combined horizontally with the ++ operator for obtaining
-      a Has[A] with Has[B], representing a dependency on two services (if you are
-      wondering what combined horizontally means, don’t worry too much because the idea
-      will become clearer when we reimplement the Tic-Tac-Toe application)
-        * The true power of the Has data type is that it is backed by an heterogeneous map from
-          service type to service implementation, so when you combine Has[A] with Has[B],
-          you can easily get access to the A and B services implementations.
-* ZLayer[-RIn, +E, +ROut <: Has[_]]
-    *  contains a description to build an
-      environment of type ROut, starting from a value RIn, possibly producing an error E during
-      creation
-    * Moreover, two layers can be combined in two fundamental ways:
-      ● Horizontally: To build a layer that has the requirements and provides the capabilities of
-      both layers, we use the ++ operator.
-      ● Vertically: In this case, the output of one layer is used as input for the subsequent layer,
-      resulting in a layer with the requirement of the first and the output of the second layer.
-      We use the >>> operator for this.
-   * aliases
-    * TaskLayer[+ROut]
-    * ULayer[+ROut]
-    * RLayer[-RIn, +ROut]
-    * Layer[+E, +ROut]
-    * URLayer[-RIn, +ROut]
-* ZLayer.fromEffect: Allows to lift a ZIO effect to a ZLayer. This is especially
-  handy when you want to define a ZLayer whose creation depends on an environment
-  and/or can fail. You can also use the equivalent operator in the ZIO data type:
-  ZIO#toLayer.
-* val program: URIO[Int, Int] = ZIO.environment[Int].map(_ * 2)
-* program.provide(12).flatMap(r => UIO(println(result))).exitCode
-* Has // implementation detail
-  * i = Has[Int] = Has(12)
-  * s = Has[String] = Has("abc")
-  * combined: Has[Int] with Has[String] = i ++ s
-  * we can use it as a map
-    * like a map where the keys are types and values are implementations of those types
-  * val int: Int = i.get
-  * val str: String = s.get
-  * combined.get[String] // like a map but with compile type check if we have something there
-  * motivation
-    * program1: ZIO[Int, Nothing, Int]
-    * program2: ZIO[String, Nothing, String]
-    * program3: ZIO[String with Int, Nothing, (Int, String)] = program1 zip program2
-    * program3.provide(12).flatMap(r => UIO(println(result))).exitCode // not works
-    * replace types with Has[X]
-      * replace val program: URIO[Int, Int] = ZIO.environment[Int].map(_ * 2)
-        * with URIO[Has[Int], Int] = ZIO.service[Int].map(_ * 2)
-      * program3: ZIO[Has[String] with Has[Int], Nothing, (Int, String)] = program1 zip program2
-    * and here where layers come in
-      * val stringLayer: ULayer[Has[String]] = ZLayer.succeed("STR")
-      * val intLayer = ZLayer.succeed(1)
-      * val combinedLayer = stringLayer ++ intLayer
-    * and there program3.provideLayer(combinedLayer)
-* ZLayer
-  * horizontal composition
-    * ZL[I1, E1, O1] ++ ZL[I2, E2, O2] => ZL[I1 with I2, super(E1, E2), O1 with O2]
-  * vertical composition
-  object UserSubscription {
-  // service definition as a class
-  class Service(notifier: UserEmailer.Service, userModel: UserDb.Service) {
-    def subscribe(u: User): Task[User] = {
-      for {
-        _ <- userModel.insert(u)
-        _ <- notifier.notify(u, s"Welcome, ${u.name}! Here are some ZIO articles for you here at Rock the JVM.")
-      } yield u
-    }
-  }
-}
+* features
+    * type-safe
+    * resource-safe
+    * potentially concurrent way
+    * principled error handling
+    * without reflection or classpath scanning
+* example
+    ```
+    type InternalServiceEnv = Has[Service1] with Has[Service2] with ...
+    type ApiRepositoryEnv = Has[ApiRepository1] with Has[ApiRepository2] with ...
 
-  val live: ZLayer[UserEmailerEnv with UserDbEnv, Nothing, UserSubscriptionEnv] =
-  ZLayer.fromServices[UserEmailer.Service, UserDb.Service, UserSubscription.Service]( emailer, db =>
-  new Service(emailer, db)
-  )
-  * and then
-  val userBackendLayer: ZLayer[Any, Nothing, UserDbEnv with UserEmailerEnv] =
-  UserDb.live ++ UserEmailer.live
-  * val userSubscriptionLayer: ZLayer[Any, Throwable, UserSubscriptionEnv] =
-    userBackendLayer >>> UserSubscription.live
-* ZLayer
-  * composing internal dependency graph (services, repositories)
-  * horizontal composition (++)
-    * get in parallel
-  * vertical composition (>>>)
-    * released in reverse order
-  * service pattern 1.0
-    * object Analytics
-      * type Analytics = Has[Service]
-      * trait Service { def track(event: String): UIO[Unit] }
-      * def track(event: String): URIO[Analytics, Unit] = ZIO.accessM(_.get.track(event))
-      * val live: ULayer[Analytics] = ???
-    * contains
-      * an object
-      * a nested service trait
-      * a type alias
-      * accessor methods
-      * layers
-  * service pattern 2.0
-    * trait Analytics { def track(event: String): UIO[Unit] }
-    * object Analytics
-      * def track(event: ...): URIO[Has[Analytics], Unit] = ZIO.serviceWith(_.track(event))
-      * val live: ULayer[Has[Analytics]] = ???
-  * defining ZLayers 2.0
-    * val live: URLayer[Has[Console], Has[Analytics]] =
-      * for
-        * console <- ZIO.service[Console]
-      * yield AnalyticsLive(console)
-      * }.toLayer
-    * case class AnalyticsLive(console: Console) extends Analytics {
-      * def track(event: String): UIO[Unit] = console.putStrLn(s"EVENT: $event")
+    val service: URLayer[InternalServiceEnv with ApiRepositoryEnv, CustomerServiceEnv] = {
+      for {
+        service <- ZIO.service[IdService] // get service from environment
+        repository <- ZIO.service[CustomerRepository] // get service from environment
+      } yield CustomerService(service, repository)
+    }.toLayer // lift a ZIO effect to a ZLayer
+    ```
+* `Has[A]` represents a dependency on a service `A`
+    * like a map but with compile type check if we have something there
+    * suppose we don't have `Has`
+        ```
+        zio = ZIO[Int with String, ...]
+        zio.provide(12) // compile type error
+        // however, if we define trait HasInt { value: Int } and its HasString counterpart
+        // we could do
+        zio = ZIO[HasInt with HasString, ...]
+        zio.provide( new HasInt with HasString { ... } )
+        ```
+    * suppose we need a dependency on a service `A` that is itself dependent on some service `B`
+        * dependencies are like a graph with layers
+        * we need a type representing some kind of `B => A`
+* `ZLayer[-RIn, +E, +ROut <: Has[_]]`
+    * description to build an environment of type `ROut`, starting from a value `RIn`, possibly
+    producing an error `E` during creation
+    * horizontal composition: `ZLayer[RIn, E1, ROut] ++ ZLayer[RIn2, E1, ROut2] = ZLayer[RIn with RIn2, E1, ROut1 with ROut2]`
+        * layer that has the requirements and provides the capabilities of both layers
+        * get in parallel
+    * vertical composition: `ZLayer[RIn, E1, ROut] >>> ZLayer[RIn2, E1, ROut2] = ZLayer[ROut, E1, ROut2]`
+        * layer with the requirement of the first and the output of the second layer
+        * released in reverse order
+* useful aliases
+    * `TaskLayer[+ROut]`
+    * `ULayer[+ROut]`
+    * `RLayer[-RIn, +ROut]`
+    * `Layer[+E, +ROut]`
+    * `URLayer[-RIn, +ROut]`
+* `type ZEnv = Clock with Console with System with Random with Blocking`
+    * is just an alias for all standard modules provided by ZIO
+* providing dependencies
+    * `provideLayer[E1 >: E, R0, R1](layer: ZLayer[R0, E1, R1])`
+    * `def provideSomeLayer[R0 <: Has[_]]: ZIO.ProvideSomeLayer[R0, R, E, A]`
+        * example: `prog.provideSomeLayer[ZEnv](...)`
+        * it's like provideLayer(ZLayer.identity[R0] ++ layer)
+    * example
+        ```
+        val effect1: URIO[Has[Int], Int] = ZIO.service[Int].map(_ * 2)
+        val effect2: ZIO[Has[String], IOException, String] = ZIO.service[String].map(_ + "!")
+
+        val effect: ZIO[Has[String] with Has[Int], IOException, (Int, String)] = effect1 <*> effect2
+
+        val program: IO[IOException, (Int, String)] = effect.provide(Has(66) ++ Has("hello world"))
+
+        override def run(args: List[String]): URIO[zio.ZEnv, ZExitCode] = (for {
+          p <- program
+          _ <- putStrLn(p.toString())
+        } yield ()).exitCode
+        ```
+        notice, that we operate on bare `Has[...]`, but we could go through layers:
+        ```
+        val stringLayer: ULayer[Has[String]] = ZLayer.succeed("hello world")
+        val intLayer: ULayer[Has[Int]] = ZLayer.succeed(66)
+        val composedLayer: ULayer[Has[String] with Has[Int]] = stringLayer ++ intLayer
+
+        val program: IO[IOException, (Int, String)] = effect.provideLayer(composedLayer)
+        ```
 ### testing
 * https://zio.dev/version-1.x/howto/mock-services
 
