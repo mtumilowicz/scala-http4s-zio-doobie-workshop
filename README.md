@@ -407,8 +407,8 @@
     ```
     type ZTestEnv = TestClock with TestConsole with TestRandom with TestSystem
 
-    private lazy val createNewCustomerResponseTest =
-        testM("create new customer then verify response") {
+    private lazy val test1 =
+        testM("test description") {
           val actual: ZIO[R, E, A] = ...
           val expected: A = ...
 
