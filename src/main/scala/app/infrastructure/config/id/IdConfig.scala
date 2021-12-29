@@ -1,18 +1,18 @@
 package app.infrastructure.config.id
 
-import app.domain.id.{IdProviderEnv, IdRepository, IdService, IdServiceEnv}
+import app.domain.id.{IdRepositoryEnv, IdRepository, IdService, IdServiceEnv}
 import app.infrastructure.id.{DeterministicIdRepository, UuidRepository}
 import zio.{URLayer, ZIO}
 
 object IdConfig {
 
-  val uuidRepository: URLayer[Any, IdProviderEnv] =
+  val uuidRepository: URLayer[Any, IdRepositoryEnv] =
     UuidRepository.live
 
-  val deterministicRepository: URLayer[Any, IdProviderEnv] =
+  val deterministicRepository: URLayer[Any, IdRepositoryEnv] =
     DeterministicIdRepository.live
 
-  val service: URLayer[IdProviderEnv, IdServiceEnv] = {
+  val service: URLayer[IdRepositoryEnv, IdServiceEnv] = {
     for {
       provider <- ZIO.service[IdRepository]
     } yield IdService(provider)

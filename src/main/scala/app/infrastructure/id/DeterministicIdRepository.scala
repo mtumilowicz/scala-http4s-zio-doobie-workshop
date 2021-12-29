@@ -1,6 +1,6 @@
 package app.infrastructure.id
 
-import app.domain.id.{IdProviderEnv, IdRepository}
+import app.domain.id.{IdRepositoryEnv, IdRepository}
 import zio.{Ref, Task, URLayer, ZLayer}
 
 private class DeterministicIdRepository(counter: Ref[Int]) extends IdRepository {
@@ -8,7 +8,7 @@ private class DeterministicIdRepository(counter: Ref[Int]) extends IdRepository 
 }
 
 object DeterministicIdRepository {
-  val live: URLayer[Any, IdProviderEnv] =
+  val live: URLayer[Any, IdRepositoryEnv] =
     ZLayer.fromEffect {
       for {
         counter <- Ref.make(0)

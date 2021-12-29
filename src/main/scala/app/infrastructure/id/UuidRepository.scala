@@ -1,6 +1,6 @@
 package app.infrastructure.id
 
-import app.domain.id.{IdProviderEnv, IdRepository}
+import app.domain.id.{IdRepositoryEnv, IdRepository}
 import zio.{Task, URLayer, ZLayer}
 
 import java.util.UUID
@@ -10,6 +10,6 @@ private class UuidRepository extends IdRepository {
 }
 
 object UuidRepository {
-  val live: URLayer[Any, IdProviderEnv] =
+  val live: URLayer[Any, IdRepositoryEnv] =
     ZLayer.succeed(new UuidRepository())
 }
