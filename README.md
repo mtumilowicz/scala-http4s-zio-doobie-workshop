@@ -389,7 +389,101 @@
         val program: IO[IOException, (Int, String)] = effect.provideLayer(composedLayer)
         ```
 ### testing
-* https://zio.dev/version-1.x/howto/mock-services
+* example
+    ```
+    object CustomerGraphQlEndpoint extends DefaultRunnableSpec {
+
+        private val suiteTest = suite("SuiteName")(
+          test1,
+          test2,
+          test3,
+          test4
+        )
+
+        override def spec =
+          customerGraphQlSuite.provideSomeLayer[ZTestEnv](testLayer)
+    ```
+    where
+    ```
+    type ZTestEnv = TestClock with TestConsole with TestRandom with TestSystem
+
+    private lazy val createNewCustomerResponseTest =
+        testM("create new customer then verify response") {
+          val actual: ZIO[R, E, A] = ...
+          val expected: A = ...
+
+          assertM(actual)(equalTo(expected))
+        }
+
+    val testLayer = sum of environments for running each tests
+    ```
+
+* `zio.test.DefaultRunnableSpec` which accepts a single suite that will be executed
+    * is very similar in its logic of operations to `zio.App`
+* `testM` function expects two arguments
+    * the label of test
+    * an assertion of type `ZIO[R, E, TestResult]`
+        * `def assertM[R, E, A](effect: ZIO[R, E, A])(assertion: AssertionM[A]): ZIO[R, E, TestResult]`
+        * `def assert[A](expr: => A)(assertion: Assertion[A]): TestResult`
+* mocking
+    * more examples here: https://zio.dev/version-1.x/howto/mock-services/
+    * example
+        * suppose we would like to mock repository
+            ```
+            trait IdRepository extends Serializable {
+              def get: Task[String]
+            }
+            ```
+            that is used in the service
+            ```
+            case class IdService(provider: IdRepository) {
+              def generate(): Task[String] = provider.get
+            }
+            ```
+            and configured with a simple layer
+            ```
+            val service: URLayer[IdRepositoryEnv, IdServiceEnv] = {
+              for {
+                provider <- ZIO.service[IdRepository]
+              } yield IdService(provider)
+            }.toLayer
+            ```
+        * first: prepare the mock object and mock environment
+            ```
+            object IdRepositoryMock extends Mock[IdRepositoryEnv] {
+
+              object GetCommand extends Effect[Unit, Throwable, String]
+
+              val layer: URLayer[Has[Proxy], IdRepositoryEnv] =
+                ZLayer.fromService { proxy =>
+                  new IdRepository {
+                    override def get: Task[String] = proxy(GetCommand)
+                  }
+                }
+            }
+            ```
+            ```
+            val mockEnv: ULayer[IdRepositoryEnv] = ( // subsequent values of idRepository.get invocations
+              IdRepositoryMock.GetCommand(Expectation.value("test1")) ++
+                IdRepositoryMock.GetCommand(Expectation.value("test2"))
+              )
+            ```
+        * second: compose the layer for the service
+            ```
+            val layer: ZLayer[Any, Nothing, IdServiceEnv] = mockEnv >>> IdConfig.service
+            ```
+        * finally - test service with mocked repository
+            ```
+            override def spec =
+                suite("CustomerController")(
+                    testM("should delete all customers 2") {
+                      for {
+                       assert1 <- assertM(CustomerServiceProxy.get)(equalTo("test1"))
+                       assert2 <- assertM(CustomerServiceProxy.get)(equalTo("test2"))
+                      } yield assert1 && assert2
+                    }
+                ).provideSomeLayer[ZEnv](layer)
+            ```
 
 ## http4s
 * https://http4s.org/v0.23/service/
