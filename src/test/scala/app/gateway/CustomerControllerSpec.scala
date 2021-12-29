@@ -96,5 +96,5 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
           Some(json"""[]""")
         )
       }
-    ).provideSomeLayer[ZEnv](DependencyConfig.inMemory.appLayer)
+    ).provideSomeLayer[ZTestEnv](DependencyConfig.inMemory.appLayer)
 }
