@@ -29,6 +29,7 @@
     * https://aleksandarskrbic.github.io/functional-effects-with-zio/
     * https://blog.rockthejvm.com/zio-fibers/
     * https://blog.rockthejvm.com/cats-effect-fibers/
+    * https://http4s.org/v0.23/service/
 
 ## preface
 
@@ -486,8 +487,34 @@
             ```
 
 ## http4s
-* https://http4s.org/v0.23/service/
+* `HttpRoutes[F] = Kleisli[OptionT[F, *], Request, Response]`
+    * `Kleisli` - wrapper around a `Request => F[Response]`, and `F` is an effectful operation
+    * can be combined with `<+>` (`cats.implicits._` and `org.http4s.implicits._`)
+* `Router("/customer" -> CustomerControllerRoutes, "/product" -> ProductControllerRoutes).orNotFound`
+    * used for combining routes
+* encoders
+    * to return content of type `T` in the response - an `EntityEncoder[T]` must be used
+    * example
+        ```
+        type CustomerTask[A] = RIO[R, A]
 
+        implicit def circeJsonDecoder[A: Decoder]: EntityDecoder[CustomerTask, A] =
+          jsonOf[CustomerTask, A]
+
+        implicit def circeJsonEncoder[A: Encoder]: EntityEncoder[CustomerTask, A] =
+          jsonEncoderOf[CustomerTask, A]
+        ```
+* server
+    * `blaze` is a Scala library for building asynchronous pipelines, with a focus on network IO
+    * example
+        ```
+        BlazeServerBuilder.apply[AppTask](runtime.platform.executor.asEC)
+                    .bindHttp(port, "0.0.0.0")
+                    .withHttpApp(routes(baseUrl)) // associates the specified routes with this http server
+                    .serve // runs the server as a process that never emits
+                    .compile // projection of this stream that allows converting it to an F[..]
+                    .drain // compiles this stream in to a value of the target effect type F
+        ```
 ## fs2
 * https://fs2.io/#/guide
 * https://fs2.io/#/documentation
