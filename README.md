@@ -482,7 +482,7 @@
                        assert2 <- assertM(CustomerServiceProxy.get)(equalTo("test2"))
                       } yield assert1 && assert2
                     }
-                ).provideSomeLayer[ZEnv](layer)
+                ).provideSomeLayer[ZTestEnv](layer)
             ```
 
 ## http4s
