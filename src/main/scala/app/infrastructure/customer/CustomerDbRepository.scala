@@ -1,8 +1,8 @@
 package app.infrastructure.customer
 
-import app.infrastructure.config.db.{DoobieConfig, FlywayConfig}
 import app.domain.customer.{Customer, CustomerId, CustomerRepository, CustomerRepositoryEnv}
 import app.infrastructure.config._
+import app.infrastructure.config.db.DoobieConfig
 import doobie._
 import doobie.implicits._
 import zio._
@@ -54,7 +54,6 @@ object CustomerDbRepository {
     ZLayer.fromManaged {
       for {
         cfg <- getDatabaseConfig.toManaged_
-        _ <- FlywayConfig.initDb(cfg).toManaged_
         transactor <- DoobieConfig.mkTransactor(cfg)
       } yield new CustomerDbRepository(transactor)
     }

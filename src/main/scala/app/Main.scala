@@ -3,6 +3,7 @@ package app
 import app.gateway.customer.CustomerController
 import app.infrastructure.config.DependencyConfig.AppEnv
 import app.infrastructure.config._
+import app.infrastructure.config.db.FlywayConfig
 import app.infrastructure.config.http.HttpConfig
 import org.http4s.HttpRoutes
 import org.http4s.implicits._
@@ -26,7 +27,11 @@ object Main extends App {
     ZIO.runtime[AppEnv]
       .flatMap { implicit runtime =>
         for {
-          AppConfig(HttpConfig(port, baseUrl), _) <- getAppConfig
+          appConfig <- getAppConfig
+          HttpConfig(port, baseUrl) = appConfig.http
+          databaseConfig = appConfig.database
+          _ <- logging.log.info(s"Migrating db with flyway")
+          _ <- FlywayConfig.initDb(databaseConfig)
           _ <- logging.log.info(s"Starting with $baseUrl")
           _ <- BlazeServerBuilder.apply[AppTask](runtime.platform.executor.asEC)
             .bindHttp(port, "0.0.0.0")
