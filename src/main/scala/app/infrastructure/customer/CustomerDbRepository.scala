@@ -10,7 +10,7 @@ import doobie.implicits._
 import doobie.util.transactor.Transactor
 import org.flywaydb.core.Flyway
 import zio._
-import zio.blocking.Blocking
+import zio.blocking.{Blocking, blocking}
 import zio.interop.catz._
 
 final private class CustomerDbRepository(xa: Transactor[Task]) extends CustomerRepository {
@@ -67,15 +67,9 @@ object CustomerDbRepository {
     def mkTransactor(
                       cfg: DatabaseConfig
                     ): ZManaged[Blocking, Throwable, HikariTransactor[Task]] =
-      ZIO.runtime[Blocking].toManaged_.flatMap { implicit rt =>
         for {
-          transactEC <- Managed.succeed(
-            rt.environment
-              .get[Blocking.Service]
-              .blockingExecutor
-              .asEC
-          )
-          connectEC = rt.platform.executor.asEC
+          connectEC <- ZIO.descriptor.map(_.executor.asEC).toManaged_
+          blockingEC <- blocking { ZIO.descriptor.map(_.executor.asEC) }.toManaged_
           transactor <- HikariTransactor
             .newHikariTransactor[Task](
               cfg.driver,
@@ -83,11 +77,10 @@ object CustomerDbRepository {
               cfg.user,
               cfg.password,
               connectEC,
-              Blocker.liftExecutionContext(transactEC)
+              Blocker.liftExecutionContext(blockingEC)
             )
-            .toManaged
+            .toManagedZIO
         } yield transactor
-      }
 
     ZLayer.fromManaged {
       for {
