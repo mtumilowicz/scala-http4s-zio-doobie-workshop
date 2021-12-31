@@ -518,9 +518,10 @@
                     .drain // compiles this stream in to a value of the target effect type F
         ```
 ## fs2
-* `Stream[F,O]` represents a discrete stream `of` O values which may request evaluation of `F` effects
+* `Stream[F,O]` represents a stream `of` O values which may request evaluation of `F` effects
     * `F` - the effect type
-    * `O` the output type
+    * `O` - the output type
+    * example: an effectful stream may produce data of type: `O` by reading it from a network socket: `IO`
 * example
     ```
     object Main2 extends scala.App {
@@ -550,6 +551,8 @@
     * stream can raise errors
         * explicitly: `Stream.raiseError`
         * implicitly: via an exception in pure code or inside an effect
+    * `handleErrorWith` method lets us catch errors
+        * the stream will be terminated after the error and no more values will be pulled
 
 ## doobie
 * https://tpolecat.github.io/doobie/docs/01-Introduction.html
