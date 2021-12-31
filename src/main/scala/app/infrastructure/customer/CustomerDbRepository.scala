@@ -1,16 +1,12 @@
 package app.infrastructure.customer
 
-import _root_.app.infrastructure.config.db.DatabaseConfig
+import app.infrastructure.config.db.{DoobieConfig, FlywayConfig}
 import app.domain.customer.{Customer, CustomerId, CustomerRepository, CustomerRepositoryEnv}
 import app.infrastructure.config._
-import cats.effect.Blocker
 import doobie._
-import doobie.hikari._
 import doobie.implicits._
-import doobie.util.transactor.Transactor
-import org.flywaydb.core.Flyway
 import zio._
-import zio.blocking.{Blocking, blocking}
+import zio.blocking.Blocking
 import zio.interop.catz._
 
 final private class CustomerDbRepository(xa: Transactor[Task]) extends CustomerRepository {
@@ -54,39 +50,12 @@ final private class CustomerDbRepository(xa: Transactor[Task]) extends CustomerR
 
 object CustomerDbRepository {
 
-  def live: ZLayer[Blocking with DatabaseConfigEnv, Throwable, CustomerRepositoryEnv] = {
-    def initDb(cfg: DatabaseConfig): Task[Unit] =
-      Task {
-        Flyway
-          .configure()
-          .dataSource(cfg.url, cfg.user, cfg.password)
-          .load()
-          .migrate()
-      }.unit
-
-    def mkTransactor(
-                      cfg: DatabaseConfig
-                    ): ZManaged[Blocking, Throwable, Transactor[Task]] =
-        for {
-          connectEC <- ZIO.descriptor.map(_.executor.asEC).toManaged_
-          blockingEC <- blocking { ZIO.descriptor.map(_.executor.asEC) }.toManaged_
-          transactor <- HikariTransactor
-            .newHikariTransactor[Task](
-              cfg.driver,
-              cfg.url,
-              cfg.user,
-              cfg.password,
-              connectEC,
-              Blocker.liftExecutionContext(blockingEC)
-            )
-            .toManagedZIO
-        } yield transactor
-
+  def live: ZLayer[DatabaseConfigEnv with Blocking, Throwable, CustomerRepositoryEnv] = {
     ZLayer.fromManaged {
       for {
         cfg <- getDatabaseConfig.toManaged_
-        _ <- initDb(cfg).toManaged_
-        transactor <- mkTransactor(cfg)
+        _ <- FlywayConfig.initDb(cfg).toManaged_
+        transactor <- DoobieConfig.mkTransactor(cfg)
       } yield new CustomerDbRepository(transactor)
     }
   }
