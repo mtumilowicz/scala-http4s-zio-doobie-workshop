@@ -30,6 +30,8 @@
     * https://blog.rockthejvm.com/zio-fibers/
     * https://blog.rockthejvm.com/cats-effect-fibers/
     * https://http4s.org/v0.23/service/
+    * https://fs2.io
+    * [Klarna Tech Talks: Compose your program flow with Stream - Fabio Labella](https://www.youtube.com/watch?v=x3GLwl1FxcA)
 
 ## preface
 
@@ -516,8 +518,7 @@
                     .drain // compiles this stream in to a value of the target effect type F
         ```
 ## fs2
-* https://fs2.io/#/guide
-* https://fs2.io/#/documentation
+
 
 ## doobie
 * https://tpolecat.github.io/doobie/docs/01-Introduction.html
