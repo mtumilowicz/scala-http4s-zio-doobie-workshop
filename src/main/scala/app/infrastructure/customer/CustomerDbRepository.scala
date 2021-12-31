@@ -66,7 +66,7 @@ object CustomerDbRepository {
 
     def mkTransactor(
                       cfg: DatabaseConfig
-                    ): ZManaged[Blocking, Throwable, HikariTransactor[Task]] =
+                    ): ZManaged[Blocking, Throwable, Transactor[Task]] =
         for {
           connectEC <- ZIO.descriptor.map(_.executor.asEC).toManaged_
           blockingEC <- blocking { ZIO.descriptor.map(_.executor.asEC) }.toManaged_
