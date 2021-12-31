@@ -1,12 +1,12 @@
 package app.infrastructure.config.db
 
-import app.infrastructure.config.{DatabaseConfigEnv, getDatabaseConfig}
+import app.infrastructure.config.{DatabaseConfigEnv, DoobieTransactorConfigEnv, getDatabaseConfig}
 import cats.effect.Blocker
 import doobie.Transactor
 import doobie.hikari.HikariTransactor
 import zio.blocking.{Blocking, blocking}
 import zio.interop.catz._
-import zio.{Has, Task, ZIO, ZLayer, ZManaged}
+import zio.{Task, ZIO, ZLayer, ZManaged}
 
 object DoobieConfig {
 
@@ -30,7 +30,7 @@ object DoobieConfig {
         .toManagedZIO
     } yield transactor
 
-  def live: ZLayer[Blocking with DatabaseConfigEnv, Throwable, Has[Transactor[Task]]] =
+  def live: ZLayer[Blocking with DatabaseConfigEnv, Throwable, DoobieTransactorConfigEnv] =
     ZLayer.fromManaged {
       for {
         cfg <- getDatabaseConfig.toManaged_

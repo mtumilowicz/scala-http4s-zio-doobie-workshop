@@ -2,7 +2,7 @@ package app.infrastructure.config
 
 import app.domain._
 import app.infrastructure.config.customer.CustomerConfig
-import app.infrastructure.config.db.DatabaseConfig
+import app.infrastructure.config.db.{DatabaseConfig, DoobieConfig}
 import app.infrastructure.config.http.HttpConfig
 import app.infrastructure.config.id.IdConfig
 import zio.blocking.Blocking
@@ -18,8 +18,11 @@ object DependencyConfig {
   type GatewayConfiguration =
     Core with HttpConfigEnv with DatabaseConfigEnv
 
+  type DoobieTransactorConfiguration =
+    GatewayConfiguration with Blocking with DoobieTransactorConfigEnv
+
   type InternalRepository =
-    GatewayConfiguration with InternalRepositoryEnv
+    DoobieTransactorConfiguration with InternalRepositoryEnv
 
   type InternalService =
     InternalRepository with InternalServiceEnv
@@ -40,7 +43,10 @@ object DependencyConfig {
     val gatewayConfiguration: ZLayer[Core, Throwable, GatewayConfiguration] =
       HttpConfig.fromAppConfig ++ DatabaseConfig.fromAppConfig ++ ZLayer.identity
 
-    val internalRepository: ZLayer[GatewayConfiguration, Throwable, InternalRepository] =
+    val doobieTransactorConfiguration: ZLayer[GatewayConfiguration, Throwable, DoobieTransactorConfiguration] =
+      DoobieConfig.live ++ ZLayer.identity
+
+    val internalRepository: ZLayer[DoobieTransactorConfiguration, Throwable, InternalRepository] =
       IdConfig.uuidRepository ++ ZLayer.identity
 
     val internalService: ZLayer[InternalRepository, Throwable, InternalService] =
@@ -55,6 +61,7 @@ object DependencyConfig {
     val appLayer: ZLayer[Blocking, Throwable, AppEnv] =
       core >>>
         gatewayConfiguration >>>
+        doobieTransactorConfiguration >>>
         internalRepository >>>
         internalService >>>
         apiRepository >>>

@@ -2,11 +2,9 @@ package app.infrastructure.customer
 
 import app.domain.customer.{Customer, CustomerId, CustomerRepository, CustomerRepositoryEnv}
 import app.infrastructure.config._
-import app.infrastructure.config.db.DoobieConfig
 import doobie._
 import doobie.implicits._
 import zio._
-import zio.blocking.Blocking
 import zio.interop.catz._
 
 final private class CustomerDbRepository(xa: Transactor[Task]) extends CustomerRepository {
@@ -50,11 +48,10 @@ final private class CustomerDbRepository(xa: Transactor[Task]) extends CustomerR
 
 object CustomerDbRepository {
 
-  def live: ZLayer[DatabaseConfigEnv with Blocking, Throwable, CustomerRepositoryEnv] = {
+  def live: ZLayer[DoobieTransactorConfigEnv, Throwable, CustomerRepositoryEnv] = {
     ZLayer.fromManaged {
       for {
-        cfg <- getDatabaseConfig.toManaged_
-        transactor <- DoobieConfig.mkTransactor(cfg)
+        transactor <- getTransactor.toManaged_
       } yield new CustomerDbRepository(transactor)
     }
   }
