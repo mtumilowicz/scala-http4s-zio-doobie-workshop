@@ -15,11 +15,11 @@ object DependencyConfig {
   type Core =
     AppConfigEnv with Logging with ZEnv
 
-  type Gateway =
+  type GatewayConfiguration =
     Core with HttpConfigEnv with DatabaseConfigEnv
 
   type InternalRepository =
-    Gateway with InternalRepositoryEnv
+    GatewayConfiguration with InternalRepositoryEnv
 
   type InternalService =
     InternalRepository with InternalServiceEnv
@@ -37,10 +37,10 @@ object DependencyConfig {
     val core: ZLayer[Blocking, Throwable, Core] =
       AppConfig.live ++ Slf4jLogger.make((_, msg) => msg) ++ ZEnv.live
 
-    val gateway: ZLayer[Core, Throwable, Gateway] =
+    val gatewayConfiguration: ZLayer[Core, Throwable, GatewayConfiguration] =
       HttpConfig.fromAppConfig ++ DatabaseConfig.fromAppConfig ++ ZLayer.identity
 
-    val internalRepository: ZLayer[Gateway, Throwable, InternalRepository] =
+    val internalRepository: ZLayer[GatewayConfiguration, Throwable, InternalRepository] =
       IdConfig.uuidRepository ++ ZLayer.identity
 
     val internalService: ZLayer[InternalRepository, Throwable, InternalService] =
@@ -53,7 +53,12 @@ object DependencyConfig {
       CustomerConfig.service ++ ZLayer.identity
 
     val appLayer: ZLayer[Blocking, Throwable, AppEnv] =
-      core >>> gateway >>> internalRepository >>> internalService >>> apiRepository >>> apiService
+      core >>>
+        gatewayConfiguration >>>
+        internalRepository >>>
+        internalService >>>
+        apiRepository >>>
+        apiService
   }
 
   object inMemory {
