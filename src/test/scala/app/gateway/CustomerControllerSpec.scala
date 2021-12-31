@@ -1,10 +1,11 @@
 package app.gateway
 
 import app.domain.customer._
-import app.gateway.HTTPSpec._
+import app.gateway.HttpTestUtils._
 import app.gateway.customer.CustomerController
 import app.gateway.customer.out.CustomerApiOutput
 import app.infrastructure.config.DependencyConfig
+import cats.data.Kleisli
 import io.circe.Decoder
 import io.circe.literal._
 import org.http4s._
@@ -18,50 +19,44 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
 
   type CustomerTask[A] = RIO[CustomerServiceEnv, A]
 
-  val app = new CustomerController[CustomerServiceEnv]().routes("").orNotFound
+  implicit val app: Kleisli[CustomerTask, Request[CustomerTask], Response[CustomerTask]] =
+    new CustomerController[CustomerServiceEnv]().routes("").orNotFound
 
   override def spec =
     suite("CustomerController")(
-      testM("should create new customer") {
-        val req = request[CustomerTask](Method.POST, "/")
-          .withEntity(json"""{"name": "Test"}""")
-        checkRequest(
-          app.run(req),
-          Status.Created,
-          Some(
-            json"""{
+      testM("create new customer and verify answer") {
+        val expectedResponse = Some(
+          json"""{
             "id": "1",
             "url": "/1",
             "name": "Test",
             "locked":false
           }""")
-        )
+
+        for {
+          response <- CustomerLifecycle.create(json"""{"name": "Test"}""")
+          bodyCheckResult <- checkBody(response, expectedResponse)
+        } yield checkStatus(response, Status.Created) && bodyCheckResult
       },
-      testM("should list all customers") {
-        val setupReq =
-          request[CustomerTask](Method.POST, "/")
-            .withEntity(json"""{"name": "Test"}""")
-        val req = request[CustomerTask](Method.GET, "/")
-        checkRequest(
-          app.run(setupReq) *> app.run(setupReq) *> app.run(req),
-          Status.Ok,
-          Some(
-            json"""[
+      testM("create two customers and then get all customers") {
+        val expectedResponse = Some(
+          json"""[
               {"id": "1", "url": "/1", "name": "Test", "locked":false},
-              {"id": "2", "url": "/2", "name": "Test", "locked":false}
-            ]""")
+              {"id": "2", "url": "/2", "name": "Test2", "locked":false}
+            ]"""
         )
+
+        for {
+          _ <- CustomerLifecycle.create(json"""{"name": "Test"}""")
+          _ <- CustomerLifecycle.create(json"""{"name": "Test2"}""")
+          response <- CustomerLifecycle.getAll
+          bodyCheckResult <- checkBody(response, expectedResponse)
+        } yield checkStatus(response, Status.Ok) && bodyCheckResult
       },
-      testM("should delete customer by id") {
-        val setupReq =
-          request[CustomerTask](Method.POST, "/")
-            .withEntity(json"""{"name": "Test"}""")
-        val deleteReq =
-          (id: String) => request[CustomerTask](Method.DELETE, s"/$id")
-        val req = request[CustomerTask](Method.GET, "/")
-        checkRequest(
-          app
-            .run(setupReq)
+      testM("create customer then delete it by id and verify answer") {
+        val expectedResponse = Some(json"""[]""")
+        for {
+          customerId <- CustomerLifecycle.create(json"""{"name": "Test"}""")
             .flatMap { resp =>
               implicit def circeJsonDecoder[A](implicit
                                                decoder: Decoder[A]
@@ -69,32 +64,28 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
 
               resp.as[CustomerApiOutput].map(_.id)
             }
-            .flatMap(id => app.run(deleteReq(id))) *> app.run(req),
-          Status.Ok,
-          Some(json"""[]""")
-        )
+          _ <- CustomerLifecycle.deleteById(customerId)
+          response <- CustomerLifecycle.getAll
+          bodyCheckResult <- checkBody(response, expectedResponse)
+        } yield checkStatus(response, Status.Ok) && bodyCheckResult
       },
-      testM("should delete non existing customer by id") {
-        val deleteReq =
-          (id: String) => request[CustomerTask](Method.DELETE, s"/$id")
-        checkRequest(
-          app.run(deleteReq("1")),
-          Status.NotFound,
-          Option.empty[String]
-        )
+      testM("should return not found when deleting non existing customer") {
+        val expectedResponse = Option.empty[String]
+
+        for {
+          response <- CustomerLifecycle.deleteById("1")
+          bodyCheckResult <- checkBody(response, expectedResponse)
+        } yield checkStatus(response, Status.NotFound) && bodyCheckResult
       },
       testM("should delete all customers") {
-        val setupReq =
-          request[CustomerTask](Method.POST, "/")
-            .withEntity(json"""{"name": "Test"}""")
-        val deleteReq = request[CustomerTask](Method.DELETE, "/")
-        val req = request[CustomerTask](Method.GET, "/")
-        checkRequest(
-          app.run(setupReq) *> app.run(setupReq) *> app
-            .run(deleteReq) *> app.run(req),
-          Status.Ok,
-          Some(json"""[]""")
-        )
+        val expectedResponse = Some(json"""[]""")
+        for {
+          _ <- CustomerLifecycle.create(json"""{"name": "Test"}""")
+          _ <- CustomerLifecycle.create(json"""{"name": "Test2"}""")
+          _ <- CustomerLifecycle.deleteAll
+          response <- CustomerLifecycle.getAll
+          bodyCheckResult <- checkBody(response, expectedResponse)
+        } yield checkStatus(response, Status.Ok) && bodyCheckResult
       }
     ).provideSomeLayer[ZTestEnv](DependencyConfig.inMemory.appLayer)
 }
