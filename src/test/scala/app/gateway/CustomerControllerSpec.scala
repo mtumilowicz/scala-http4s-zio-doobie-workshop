@@ -1,7 +1,7 @@
 package app.gateway
 
 import app.domain.customer._
-import app.gateway.HttpTestUtils._
+import app.gateway.HttpTestUtils.{checkBody, _}
 import app.gateway.customer.CustomerController
 import app.gateway.customer.out.CustomerApiOutput
 import app.infrastructure.config.DependencyConfig
@@ -14,6 +14,7 @@ import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
 import org.http4s.circe._
 import org.http4s.implicits._
 import zio._
+//import zio.console.putStrLn
 import zio.interop.catz._
 import zio.test._
 
@@ -69,7 +70,7 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
         customerId <- asApiOutput(createdResponse).map(_.id)
         response <- CustomerLifecycle.getById(customerId)
         bodyCheckResult <- checkBody(response, expectedResponse)
-      } yield checkStatus(response, Status.Created) && bodyCheckResult
+      } yield checkStatus(response, Status.Ok) && bodyCheckResult
     }
 
   lazy val queryNonExistingCustomerTest =

@@ -33,9 +33,9 @@ class CustomerController[R <: CustomerServiceEnv] {
       jsonEncoderOf[CustomerTask, A]
 
     HttpRoutes.of[CustomerTask] {
-      case GET -> Root / UUIDVar(id) =>
+      case GET -> Root / id =>
         for {
-          customer <- CustomerServiceProxy.getById(CustomerId(id.toString))
+          customer <- CustomerServiceProxy.getById(CustomerId(id))
           response <- customer.fold(NotFound())(x => Ok(CustomerApiOutput(rootUri, x)))
         } yield response
 
