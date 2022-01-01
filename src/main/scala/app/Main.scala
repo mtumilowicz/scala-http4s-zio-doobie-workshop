@@ -12,7 +12,6 @@ import org.http4s.server.blaze.BlazeServerBuilder
 import zio.interop.catz._
 import zio.{ExitCode => ZExitCode, _}
 
-
 object Main extends App {
   type AppTask[A] = RIO[AppEnv, A]
 

@@ -19,7 +19,7 @@ object DependencyConfig {
     Core with HttpConfigEnv with DatabaseConfigEnv
 
   type DoobieTransactorConfiguration =
-    GatewayConfiguration with Blocking with DoobieTransactorConfigEnv
+    GatewayConfiguration with DoobieTransactorConfigEnv
 
   type InternalRepository =
     DoobieTransactorConfiguration with InternalRepositoryEnv

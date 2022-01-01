@@ -32,6 +32,7 @@
     * https://http4s.org/v0.23/service/
     * https://fs2.io
     * [Klarna Tech Talks: Compose your program flow with Stream - Fabio Labella](https://www.youtube.com/watch?v=x3GLwl1FxcA)
+    * https://tpolecat.github.io/
 
 ## preface
 
@@ -555,4 +556,34 @@
         * the stream will be terminated after the error and no more values will be pulled
 
 ## doobie
-* https://tpolecat.github.io/doobie/docs/01-Introduction.html
+* In the doobie high level API the most common types we will deal with have the form ConnectionIO[A], specifying computations that take place in a context where a java.sql.Connection is available, ultimately producing a value of type A
+* creating transactor
+    ```
+    val xa = Transactor.fromDriverManager[IO](
+      "org.postgresql.Driver",     // driver classname
+      "jdbc:postgresql:world",     // connect URL (driver-specific)
+      "postgres",                  // user
+      ""                           // password
+    )
+    ```
+    * constructors of `Transactor` use the JDBC DriverManager to allocate connections
+        * DriverManager is unbounded and will allocate new connections until server resources are exhausted
+        * preferable: use `DataSourceTransactor` with an underlying bounded connection pool
+            * `H2Transactor` and `HikariTransactor`
+        * blocking operations are executed on an unbounded cached daemon thread pool by default
+            * risk of exhausting system threads
+* defining queries
+    ```
+    object SQL {
+        def get(id: CustomerId): Query0[Customer] = sql"""
+          SELECT * FROM Customers WHERE ID = ${id.value}
+          """.query[Customer]
+    }
+    ```
+* describing execution queries
+    ```
+    SQL
+      .get(id)
+      .option
+      .transact(xa)
+    ```

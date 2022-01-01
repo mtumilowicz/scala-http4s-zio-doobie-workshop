@@ -60,6 +60,7 @@ object CustomerDbRepository {
     val getAll: Query0[Customer] = sql"""
       SELECT * FROM Customers
       """.query[Customer]
+
     val deleteAll: Update0 =
       sql"""
       DELETE from Customers
