@@ -5,7 +5,6 @@ import app.infrastructure.config.customer.CustomerConfig
 import app.infrastructure.config.db.{DatabaseConfig, DoobieConfig}
 import app.infrastructure.config.http.HttpConfig
 import app.infrastructure.config.id.IdConfig
-import zio.blocking.Blocking
 import zio.logging.Logging
 import zio.logging.slf4j.Slf4jLogger
 import zio.{ULayer, URLayer, ZEnv, ZLayer}
@@ -37,7 +36,7 @@ object DependencyConfig {
 
   object live {
 
-    val core: ZLayer[Blocking, Throwable, Core] =
+    val core: ZLayer[Any, Throwable, Core] =
       AppConfig.live ++ Slf4jLogger.make((_, msg) => msg) ++ ZEnv.live
 
     val gatewayConfiguration: ZLayer[Core, Throwable, GatewayConfiguration] =
@@ -58,7 +57,7 @@ object DependencyConfig {
     val apiService: ZLayer[ApiRepository, Throwable, ApiService] =
       CustomerConfig.service ++ ZLayer.identity
 
-    val appLayer: ZLayer[Blocking, Throwable, AppEnv] =
+    val appLayer: ZLayer[Any, Throwable, AppEnv] =
       core >>>
         gatewayConfiguration >>>
         doobieTransactorConfiguration >>>
