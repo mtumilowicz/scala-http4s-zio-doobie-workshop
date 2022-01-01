@@ -14,7 +14,6 @@ import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
 import org.http4s.circe._
 import org.http4s.implicits._
 import zio._
-//import zio.console.putStrLn
 import zio.interop.catz._
 import zio.test._
 
