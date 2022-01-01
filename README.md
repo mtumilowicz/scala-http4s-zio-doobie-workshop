@@ -35,6 +35,19 @@
     * https://tpolecat.github.io/
 
 ## preface
+* goals of this workshop
+    * introduction to pure functional programming tools
+        * zio
+            * basic constructs
+            * error handling
+            * type-safe dependency injection
+            * execution / concurrency - fibers
+        * http4s
+        * fs2
+        * doobie
+    * show how to model domain with effects
+* workshop plan
+    task: implement other endpoint (get / create) for Products
 
 ## introduction
 * functional programs do not interact with the external world directly
