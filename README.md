@@ -1,4 +1,4 @@
-# scala-http4s-zio-fs2-workshop
+# scala-http4s-zio-fs2-doobie-workshop
 
 * references
     * https://medium.com/@ghostdogpr/wrapping-impure-code-with-zio-9265c219e2e
