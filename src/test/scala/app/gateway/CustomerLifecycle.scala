@@ -24,6 +24,12 @@ object CustomerLifecycle {
     app.run(request)
   }
 
+  def getById(id: String)(implicit app: AppEndpoints): CustomerTask[Response[CustomerTask]] = {
+    val request = makeRequest[CustomerTask](Method.GET, s"/$id")
+
+    app.run(request)
+  }
+
   def deleteById(id: String)(implicit app: AppEndpoints): CustomerTask[Response[CustomerTask]] = {
     val request = makeRequest[CustomerTask](Method.DELETE, s"/$id")
 

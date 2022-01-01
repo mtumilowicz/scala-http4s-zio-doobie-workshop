@@ -7,11 +7,14 @@ import app.gateway.customer.out.CustomerApiOutput
 import app.infrastructure.config.DependencyConfig
 import cats.data.Kleisli
 import io.circe.Decoder
+import io.circe.generic.codec.DerivedAsObjectCodec.deriveCodec
 import io.circe.literal._
 import org.http4s._
+import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
 import org.http4s.circe._
 import org.http4s.implicits._
 import zio._
+import zio.console.putStrLn
 import zio.interop.catz._
 import zio.test._
 
@@ -21,6 +24,13 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
 
   implicit val app: Kleisli[CustomerTask, Request[CustomerTask], Response[CustomerTask]] =
     new CustomerController[CustomerServiceEnv]().routes("").orNotFound
+
+//  private val customerControllerSuite = suite("CustomerController")(
+//    createNewCustomerResponseTest,
+//    queryNewCustomerTest,
+//    deleteCustomerResponseTest,
+//    queryDeletedCustomerTest
+//  )
 
   override def spec =
     suite("CustomerController")(
@@ -37,6 +47,27 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
           response <- CustomerLifecycle.create(json"""{"name": "Test"}""")
           bodyCheckResult <- checkBody(response, expectedResponse)
         } yield checkStatus(response, Status.Created) && bodyCheckResult
+      },
+      testM("create new customer then query it") {
+        val expectedResponse = Some(
+          json"""{
+            "id": "1",
+            "url": "/1",
+            "name": "Test",
+            "locked":false
+          }""")
+
+        for {
+          createdResponse <- CustomerLifecycle.create(json"""{"name": "Test"}""")
+          customerId <- asApiOutput(createdResponse).map(_.id)
+          response <- CustomerLifecycle.getById(customerId)
+          bodyCheckResult <- checkBody(response, expectedResponse)
+        } yield checkStatus(response, Status.Created) && bodyCheckResult
+      },
+      testM("query non existing customer") {
+        for {
+          response <- CustomerLifecycle.getById("111")
+        } yield checkStatus(response, Status.NotFound)
       },
       testM("create two customers and then get all customers") {
         val expectedResponse = Some(
@@ -56,14 +87,9 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
       testM("create customer then delete it by id and verify answer") {
         val expectedResponse = Some(json"""[]""")
         for {
-          customerId <- CustomerLifecycle.create(json"""{"name": "Test"}""")
-            .flatMap { resp =>
-              implicit def circeJsonDecoder[A](implicit
-                                               decoder: Decoder[A]
-                                              ): EntityDecoder[CustomerTask, A] = jsonOf[CustomerTask, A]
-
-              resp.as[CustomerApiOutput].map(_.id)
-            }
+          response <- CustomerLifecycle.create(json"""{"name": "Test"}""")
+          customer <- asApiOutput(response)
+          customerId = customer.id
           _ <- CustomerLifecycle.deleteById(customerId)
           response <- CustomerLifecycle.getAll
           bodyCheckResult <- checkBody(response, expectedResponse)
@@ -87,5 +113,13 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
           bodyCheckResult <- checkBody(response, expectedResponse)
         } yield checkStatus(response, Status.Ok) && bodyCheckResult
       }
-    ).provideSomeLayer[ZTestEnv](DependencyConfig.inMemory.appLayer)
+    ).provideSomeLayer[ZEnv](DependencyConfig.inMemory.appLayer)
+
+  private def asApiOutput(response: Response[CustomerTask]): CustomerTask[CustomerApiOutput] = {
+    implicit def circeJsonDecoder[A](implicit
+                                     decoder: Decoder[A]
+                                    ): EntityDecoder[CustomerTask, A] = jsonOf[CustomerTask, A]
+
+    response.as[CustomerApiOutput]
+  }
 }
