@@ -1,4 +1,4 @@
-[![Build Status](https://app.travis-ci.com/mtumilowicz/scala-http4s-zio-fs2-workshop.svg?branch=master)](https://app.travis-ci.com/mtumilowicz/scala-http4s-zio-fs2-workshop)
+[![Build Status](https://app.travis-ci.com/mtumilowicz/scala-http4s-zio-fs2-doobie-workshop.svg?branch=master)](https://app.travis-ci.com/mtumilowicz/scala-http4s-zio-fs2-doobie-workshop)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 # scala-http4s-zio-fs2-doobie-workshop
 
