@@ -533,6 +533,13 @@
                     .compile // projection of this stream that allows converting it to an F[..]
                     .drain // compiles this stream in to a value of the target effect type F
         ```
+    * every `ServerBuilder[F]` has a `.serve` method that returns a `Stream[F, ExitCode]`
+        * this stream runs forever without emitting any output
+        * when this process is run with `.unsafeRunSync` on the main thread, it blocks forever
+            * keeps the JVM (and your server) alive until the JVM is killed
+    * cats-effect provides an `cats.effect.IOApp` trait with an abstract run method that returns a `IO[ExitCode]`
+        * IOApp runs the process and adds a JVM shutdown hook to interrupt the infinite process and gracefully shut
+        down your server when a SIGTERM is received
 ## fs2
 * `Stream[F,O]` represents a stream `of` O values which may request evaluation of `F` effects
     * `F` - the effect type
