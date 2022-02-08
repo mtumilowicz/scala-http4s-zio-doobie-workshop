@@ -510,18 +510,6 @@
     * can be combined with `<+>` (`cats.implicits._` and `org.http4s.implicits._`)
 * `Router("/customer" -> CustomerControllerRoutes, "/product" -> ProductControllerRoutes).orNotFound`
     * used for combining routes
-* encoders
-    * to return content of type `T` in the response - an `EntityEncoder[T]` must be used
-    * example
-        ```
-        type CustomerTask[A] = RIO[R, A]
-
-        implicit def circeJsonDecoder[A: Decoder]: EntityDecoder[CustomerTask, A] =
-          jsonOf[CustomerTask, A]
-
-        implicit def circeJsonEncoder[A: Encoder]: EntityEncoder[CustomerTask, A] =
-          jsonEncoderOf[CustomerTask, A]
-        ```
 * server
     * `blaze` is a Scala library for building asynchronous pipelines, with a focus on network IO
     * example
