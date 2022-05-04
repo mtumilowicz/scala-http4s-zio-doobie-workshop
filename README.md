@@ -32,8 +32,6 @@
     * https://blog.rockthejvm.com/zio-fibers/
     * https://blog.rockthejvm.com/cats-effect-fibers/
     * https://http4s.org/v0.23/service/
-    * https://fs2.io
-    * [Klarna Tech Talks: Compose your program flow with Stream - Fabio Labella](https://www.youtube.com/watch?v=x3GLwl1FxcA)
     * https://tpolecat.github.io/
 
 ## preface
