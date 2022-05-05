@@ -43,7 +43,6 @@
             * type-safe dependency injection
             * execution / concurrency - fibers
         * http4s
-        * fs2
         * doobie
     * show how to model domain with effects
 * workshop plan
