@@ -45,8 +45,7 @@
         * http4s
         * doobie
     * show how to model domain with effects
-* workshop plan
-    task: implement other endpoint (get / create) for Products
+* workshop task: implement other endpoint (get / create) for Products
 
 ## introduction
 * functional programs do not interact with the external world directly
