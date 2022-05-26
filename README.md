@@ -2,7 +2,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 # scala-http4s-zio-doobie-workshop
 
-* references
+* references 
     * https://medium.com/@ghostdogpr/wrapping-impure-code-with-zio-9265c219e2e
     * https://scalac.io/blog/introduction-to-programming-with-zio-functional-effects/
     * https://degoes.net/
