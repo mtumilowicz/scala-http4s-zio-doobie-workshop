@@ -3,6 +3,7 @@ package app.infrastructure
 import app.infrastructure.config.db.DatabaseConfig
 import app.infrastructure.config.http.HttpConfig
 import doobie.Transactor
+import org.http4s.client.Client
 import zio._
 
 package object config {
@@ -10,6 +11,7 @@ package object config {
   type HttpConfigEnv = Has[HttpConfig]
   type DatabaseConfigEnv = Has[DatabaseConfig]
   type DoobieTransactorConfigEnv = Has[Transactor[Task]]
+  type HttpClientConfigEnv = Has[Client[Task]]
 
   val getAppConfig: URIO[AppConfigEnv, AppConfig] =
     ZIO.access(_.get)
@@ -21,5 +23,8 @@ package object config {
     ZIO.access(_.get)
 
   val getTransactor: URIO[DoobieTransactorConfigEnv, Transactor[Task]] =
+    ZIO.access(_.get)
+
+  val getHttpClient: URIO[HttpClientConfigEnv, Client[Task]] =
     ZIO.access(_.get)
 }

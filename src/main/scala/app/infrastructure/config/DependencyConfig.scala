@@ -3,7 +3,7 @@ package app.infrastructure.config
 import app.domain._
 import app.infrastructure.config.customer.CustomerConfig
 import app.infrastructure.config.db.{DatabaseConfig, DoobieConfig}
-import app.infrastructure.config.http.HttpConfig
+import app.infrastructure.config.http.{HttpClientConfig, HttpConfig}
 import app.infrastructure.config.id.IdConfig
 import zio.logging.Logging
 import zio.logging.slf4j.Slf4jLogger
@@ -20,8 +20,11 @@ object DependencyConfig {
   type DoobieTransactorConfiguration =
     GatewayConfiguration with DoobieTransactorConfigEnv
 
+  type HttpClientConfiguration =
+    GatewayConfiguration with HttpClientConfigEnv
+
   type InternalRepository =
-    DoobieTransactorConfiguration with InternalRepositoryEnv
+    HttpClientConfiguration with InternalRepositoryEnv
 
   type InternalService =
     InternalRepository with InternalServiceEnv
@@ -45,14 +48,17 @@ object DependencyConfig {
     val doobieTransactorConfiguration: ZLayer[GatewayConfiguration, Throwable, DoobieTransactorConfiguration] =
       DoobieConfig.live ++ ZLayer.identity
 
-    val internalRepository: ZLayer[DoobieTransactorConfiguration, Throwable, InternalRepository] =
+    val httpClientConfiguration: ZLayer[GatewayConfiguration, Throwable, HttpClientConfiguration] =
+      HttpClientConfig.live ++ ZLayer.identity
+
+    val internalRepository: ZLayer[HttpClientConfiguration, Throwable, InternalRepository] =
       IdConfig.uuidRepository ++ ZLayer.identity
 
     val internalService: ZLayer[InternalRepository, Throwable, InternalService] =
       IdConfig.service ++ ZLayer.identity
 
     val apiRepository: ZLayer[InternalService, Throwable, ApiRepository] =
-      CustomerConfig.dbRepository ++ IdConfig.service ++ ZLayer.identity
+      CustomerConfig.httpRepository ++ IdConfig.service ++ ZLayer.identity
 
     val apiService: ZLayer[ApiRepository, Throwable, ApiService] =
       CustomerConfig.service ++ ZLayer.identity
@@ -60,7 +66,7 @@ object DependencyConfig {
     val appLayer: ZLayer[Any, Throwable, AppEnv] =
       core >>>
         gatewayConfiguration >>>
-        doobieTransactorConfiguration >>>
+        httpClientConfiguration >>>
         internalRepository >>>
         internalService >>>
         apiRepository >>>
