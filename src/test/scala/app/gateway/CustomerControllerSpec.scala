@@ -16,6 +16,7 @@ import org.http4s.implicits._
 import zio._
 import zio.interop.catz._
 import zio.test._
+import zio.magic._
 
 object CustomerControllerSpec extends DefaultRunnableSpec {
 
@@ -36,7 +37,9 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
 
   override def spec =
     customerControllerSuite
-      .provideSomeLayer[ZEnv](DependencyConfig.inMemory.appLayer)
+      .inject(
+        DependencyConfig.inMemory.appLayer
+      )
 
   lazy val createNewCustomerResponseTest =
     testM("create new customer and verify answer") {

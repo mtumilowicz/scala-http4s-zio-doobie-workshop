@@ -11,6 +11,7 @@ import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import zio.interop.catz._
 import zio.{ExitCode => ZExitCode, _}
+import zio.magic._
 
 object Main extends App {
   type AppTask[A] = RIO[AppEnv, A]
@@ -18,8 +19,9 @@ object Main extends App {
 
   override def run(args: List[String]): URIO[ZEnv, ZExitCode] = {
     program
-      .provideSomeLayer[ZEnv](DependencyConfig.live.appLayer)
-      .orDie
+      .inject(
+        DependencyConfig.live.appLayer
+      ).orDie
   }
 
   val program: ZIO[AppEnv, Throwable, ZExitCode] = {

@@ -30,6 +30,7 @@ object Dependencies {
       "dev.zio"                      %% "zio-test-sbt"        % zio   % "test",
       "dev.zio"                      %% "zio-test"            % zio   % "test",
       "dev.zio"                      %% "zio"                 % zio,
+      "io.github.kitlangton"         %% "zio-magic"           % "0.3.12",
       "io.circe"                     %% "circe-core"          % circe,
       "io.circe"                     %% "circe-generic"       % circe,
       "io.circe"                     %% "circe-literal"       % circe % "test",
