@@ -66,12 +66,4 @@ object DependencyConfig {
         apiRepository >>>
         apiService
   }
-
-  object inMemory {
-    private val internalRepository: ULayer[InternalRepositoryEnv] = IdConfig.deterministicRepository
-    private val internalService: URLayer[InternalRepositoryEnv, InternalServiceEnv] = IdConfig.service
-    private val apiRepository: ULayer[ApiRepositoryEnv] = CustomerConfig.inMemoryRepository
-    private val apiService: URLayer[InternalServiceEnv with ApiRepositoryEnv, ApiServiceEnv] = CustomerConfig.service
-    val appLayer: ULayer[ApiServiceEnv] = ((internalRepository >>> internalService) ++ apiRepository) >>> apiService
-  }
 }
