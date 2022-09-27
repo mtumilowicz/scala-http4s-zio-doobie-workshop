@@ -1,26 +1,46 @@
 package app
 
+import app.domain.{ApiRepositoryEnv, ApiServiceEnv, InternalRepositoryEnv, InternalServiceEnv}
 import app.gateway.customer.CustomerController
-import app.infrastructure.config.DependencyConfig.AppEnv
 import app.infrastructure.config._
-import app.infrastructure.config.db.FlywayConfig
+import app.infrastructure.config.customer.CustomerConfig
+import app.infrastructure.config.db.{DatabaseConfig, DoobieConfig, FlywayConfig}
 import app.infrastructure.config.http.HttpConfig
+import app.infrastructure.config.id.IdConfig
 import org.http4s.HttpRoutes
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import zio.interop.catz._
+import zio.logging.Logging
+import zio.logging.slf4j.Slf4jLogger
 import zio.{ExitCode => ZExitCode, _}
 import zio.magic._
 
 object Main extends App {
-  type AppTask[A] = RIO[AppEnv, A]
 
+  type AppEnv = ZEnv
+    with Logging
+    with AppConfigEnv
+    with HttpConfigEnv
+    with DatabaseConfigEnv
+    with DoobieTransactorConfigEnv
+    with InternalRepositoryEnv
+    with InternalServiceEnv
+    with ApiRepositoryEnv
+    with ApiServiceEnv
+
+  type AppTask[A] = RIO[AppEnv, A]
 
   override def run(args: List[String]): URIO[ZEnv, ZExitCode] = {
     program
       .inject(
-        DependencyConfig.live.appLayer
+        AppConfig.live ++ Slf4jLogger.make((_, msg) => msg) ++ ZEnv.live,
+        HttpConfig.fromAppConfig ++ DatabaseConfig.fromAppConfig,
+        DoobieConfig.live,
+        IdConfig.uuidRepository,
+        CustomerConfig.dbRepository ++ IdConfig.service,
+        CustomerConfig.service
       ).orDie
   }
 
