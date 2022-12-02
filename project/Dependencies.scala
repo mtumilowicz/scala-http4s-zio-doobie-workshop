@@ -34,6 +34,7 @@ object Dependencies {
       "io.circe"                     %% "circe-core"          % circe,
       "io.circe"                     %% "circe-generic"       % circe,
       "io.circe"                     %% "circe-literal"       % circe % "test",
+      "io.scalaland"                 %% "chimney"             % "0.6.2",
       "org.apache.logging.log4j"      % "log4j-api"           % log4j,
       "org.apache.logging.log4j"      % "log4j-core"          % log4j,
       "org.apache.logging.log4j"      % "log4j-slf4j-impl"    % log4j,
