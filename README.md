@@ -24,6 +24,7 @@
     * [ZIO from Scratch — Part 3](https://www.youtube.com/watch?v=0IU9mGO_9Rw)
     * [ZIO from Scratch — Part 4](https://www.youtube.com/watch?v=95Vk-vVgnOg)
     * [ZIO from Scratch — Part 5](https://www.youtube.com/watch?v=uzDs4X42w2k)
+    * [Data Juggling - Part 1 - Getting Started with #Chimney](https://www.youtube.com/watch?v=ezz0BpEHEQY)
     * https://blog.rockthejvm.com/structuring-services-with-zio-zlayer/
     * https://blog.softwaremill.com/zio-environment-meets-constructor-based-dependency-injection-6a13de6e000
     * https://alvinalexander.com/scala/what-effects-effectful-mean-in-functional-programming/
@@ -33,6 +34,8 @@
     * https://blog.rockthejvm.com/cats-effect-fibers/
     * https://http4s.org/v0.23/service/
     * https://tpolecat.github.io/
+    * https://github.com/scalalandio/chimney
+    * https://scalalandio.github.io/chimney/
 
 ## preface
 * goals of this workshop
@@ -44,6 +47,7 @@
             * execution / concurrency - fibers
         * http4s
         * doobie
+        * chimney
     * show how to model domain with effects
 * workshop task: implement other endpoint (get / create) for Products
 
@@ -557,3 +561,142 @@
       .option
       .transact(xa)
     ```
+
+## chimney
+* library for boilerplate-free data transformations
+* provides a compact DSL with which you can define transformation rules and transform your objects with
+as little boilerplate as possible
+* problem
+    ```
+    val command = MakeCoffee(id = Random.nextInt,
+                             kind = "Espresso",
+                             addict = "Piotr")
+    val event = CoffeeMade(id = command.id,
+                           kind = command.kind,
+                           forAddict = command.addict,
+                           at = ZonedDateTime.now)
+    ```
+* solution
+    ```
+    import io.scalaland.chimney.dsl._
+
+    val event = command.into[CoffeeMade]
+      .withFieldComputed(_.at, _ => ZonedDateTime.now)
+      .withFieldRenamed(_.addict, _.forAddict)
+      .transform
+    ```
+* use case
+    * transform an object of one type to another object which contains a number of the same or similar
+    fields in their definitions
+    * applying practices like DDD (Domain-Driven-Design) where suggested approach is to separate model
+    schemas of different bounded contexts
+    * use code-generation tools like Protocol Buffers that generate primitive types like Int or String, while
+    you'd prefer to use value objects in you domain-level code to improve type-safety and readability
+* underneath it uses Scala macros to give you:
+    * type-safety at compile-time
+    * excellent error messages
+* supports case class patching as well
+    * happens when you hold an object of some type and want to modify only subset of its fields with values
+    taken from other (patch) object
+    * example
+        ```
+        case class User(id: Int, email: String, address: String, phone: Long)
+        case class UserUpdateForm(email: String, phone: Long)
+
+        val user = User(10, "abc@example.com", "Broadway", 123456789L)
+        val updateForm = UserUpdateForm("xyz@example.com", 123123123L)
+
+        user.patchUsing(updateForm)
+        // User(10, "xyz@example.com", "Broadway", 123123123L)
+        ```
+* providing missing values
+    * problem
+        ```
+        val stevie = Catterpillar(5, "Steve")
+        val steve = stevie.transformInto[Butterfly]
+        // error: Chimney can't derive transformation from Catterpillar to Butterfly
+        //
+        // Butterfly
+        //   wingsColor: String - no accessor named wingsColor in source type Catterpillar
+        //
+        // Consult https://scalalandio.github.io/chimney for usage examples.
+        //
+        //        val steve = stevie.transformInto[Butterfly]
+        //
+        ```
+    * solution
+        ```
+        val steve = stevie.into[Butterfly]
+          .withFieldConst(_.wingsColor, "white")
+          .transform
+        ```
+        or dynamically, providing a function
+        ```
+        val steve = stevie.into[Butterfly]
+          .withFieldComputed(_.wingsColor, c => if(c.size > 4) "yellow" else "gray")
+          .transform
+        // Butterfly(5, "Steve", "yellow")
+        ```
+* fields renaming
+    ```
+    val jamesRU = jamesGB.into[SpyRU]
+        .withFieldRenamed(_.name, _.imya)
+        .withFieldRenamed(_.surname, _.familia)
+        .transform
+    ```
+* value classes
+    * automatic value class field extraction and wrapping
+    * example
+        ```
+        val richPerson = rich.Person(PersonId(10), PersonName("Bill"), 30)
+        val plainPerson = richPerson.transformInto[plain.Person]
+        val richPerson2 = plainPerson.transformInto[rich.Person]
+        ```
+* options support
+* lifted transformers
+    * transformers wrap total functions of type `From => To`
+        * don’t really support partial transformations, where depending on the input value, transformation
+        may succeed or fail
+    * problem
+        ```
+        case class RegistrationForm(email: String,
+                                    username: String,
+                                    password: String,
+                                    age: String) // age as string
+
+        case class RegisteredUser(email: String,
+                                  username: String,
+                                  passwordHash: String,
+                                  age: Int)
+        ```
+    * solution: lifted transformers, provided by TransformerF type class
+        ```
+        val okForm = RegistrationForm("john@example.com", "John", "s3cr3t", "40")
+
+        okForm
+          .intoF[Option, RegisteredUser] // (1)
+          .withFieldComputed(_.passwordHash, form => hashpw(form.password))
+          .withFieldComputedF(_.age, _.age.toIntOption) // (2)
+          .transform // (3)
+        // Some(RegisteredUser("john@example.com", "John", "...", 40)): Option[RegisteredUser]
+        ```
+    * summary
+        * `into[RegisteredUser]` -> `intoF[Option, RegisteredUser]`
+        * `withFieldComputed` -> `withFieldComputedF`
+            * second parameter is a function that wraps result into a type constructor provided in (1)
+        * transform call is not `RegisteredUser`, but `Option[RegisteredUser]`
+        * `method` -> `methodF`
+        * capturing validation errors
+            * support for `Either[C[TransformationError[M]], +*]`, where
+                * M - type of error message
+                * C[_] - collection type to store all the transformation errors (like Seq, Vector, List, etc.)
+                * TransformationError - default implementation of error containing path
+            * example
+                ```
+                type V[+A] = Either[List[TransformationError[String]], A]
+
+                rawData.transformIntoF[V, Data] == Left(List(TransformationError(...)))
+                ```
+    * cats integration
+        * you need to import `io.scalaland.chimney.cats._` in order to support the `Validated`
+        * `type V[+A] = ValidatedNec[TransformationError[String], A]`
