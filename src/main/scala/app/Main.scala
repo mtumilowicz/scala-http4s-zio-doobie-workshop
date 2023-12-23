@@ -34,12 +34,15 @@ object Main extends App {
 
   override def run(args: List[String]): URIO[ZEnv, ZExitCode] = {
     program
-      .inject(
-        AppConfig.live ++ Slf4jLogger.make((_, msg) => msg) ++ ZEnv.live,
-        HttpConfig.fromAppConfig ++ DatabaseConfig.fromAppConfig,
+      .injectSome[ZEnv](
+        AppConfig.live,
+        Slf4jLogger.make((_, msg) => msg),
+        HttpConfig.fromAppConfig,
+        DatabaseConfig.fromAppConfig,
         DoobieConfig.live,
         IdConfig.uuidRepository,
-        CustomerConfig.dbRepository ++ IdConfig.service,
+        CustomerConfig.dbRepository,
+        IdConfig.service,
         CustomerConfig.service
       ).orDie
   }
