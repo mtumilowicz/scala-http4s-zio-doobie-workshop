@@ -1,9 +1,9 @@
-package app.infrastructure.config.db
+package app.infrastructure.db
 
-import app.infrastructure.config.{DatabaseConfigEnv, DoobieTransactorConfigEnv, getDatabaseConfig}
+import app.infrastructure.config.{DatabaseConfigEnv, DoobieTransactorConfigEnv}
 import doobie.Transactor
 import zio.interop.catz._
-import zio.{Task, ZLayer, ZManaged}
+import zio.{Task, ZIO, ZLayer, ZManaged}
 
 object DoobieConfig {
 
@@ -23,7 +23,7 @@ object DoobieConfig {
   def live: ZLayer[DatabaseConfigEnv, Throwable, DoobieTransactorConfigEnv] =
     ZLayer.fromManaged {
       for {
-        cfg <- getDatabaseConfig.toManaged_
+        cfg <- ZIO.service[DatabaseConfig].toManaged_
         transactor <- mkTransactor(cfg)
       } yield transactor
     }

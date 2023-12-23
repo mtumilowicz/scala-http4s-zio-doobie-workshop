@@ -1,4 +1,4 @@
-package app.infrastructure.config.id
+package app.infrastructure.id
 
 import app.domain.id.{IdRepositoryEnv, IdRepository, IdService, IdServiceEnv}
 import app.infrastructure.id.{DeterministicIdRepository, UuidRepository}

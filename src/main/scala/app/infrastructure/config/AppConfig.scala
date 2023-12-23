@@ -1,7 +1,7 @@
 package app.infrastructure.config
 
-import app.infrastructure.config.db.DatabaseConfig
-import app.infrastructure.config.http.HttpConfig
+import app.infrastructure.db.DatabaseConfig
+import app.infrastructure.http.HttpConfig
 import pureconfig._
 import pureconfig.generic.semiauto._
 import zio._

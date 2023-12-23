@@ -1,11 +1,11 @@
 package app.gateway
 
 import app.domain.customer._
-import app.gateway.HttpTestUtils.{checkBody, _}
+import app.gateway.HttpTestUtils._
 import app.gateway.customer.CustomerController
 import app.gateway.customer.out.CustomerApiOutput
-import app.infrastructure.config.customer.CustomerConfig
-import app.infrastructure.config.id.IdConfig
+import app.infrastructure.customer.CustomerConfig
+import app.infrastructure.id.IdConfig
 import cats.data.Kleisli
 import io.circe.Decoder
 import io.circe.generic.codec.DerivedAsObjectCodec.deriveCodec

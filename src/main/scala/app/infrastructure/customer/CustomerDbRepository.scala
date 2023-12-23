@@ -51,7 +51,7 @@ object CustomerDbRepository {
   def live: ZLayer[DoobieTransactorConfigEnv, Throwable, CustomerRepositoryEnv] = {
     ZLayer.fromManaged {
       for {
-        transactor <- getTransactor.toManaged_
+        transactor <- ZIO.service[Transactor[Task]].toManaged_
       } yield new CustomerDbRepository(transactor)
     }
   }

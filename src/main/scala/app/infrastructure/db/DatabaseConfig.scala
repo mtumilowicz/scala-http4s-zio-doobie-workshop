@@ -1,4 +1,4 @@
-package app.infrastructure.config.db
+package app.infrastructure.db
 
 import app.infrastructure.config.{AppConfigEnv, DatabaseConfigEnv}
 import pureconfig._

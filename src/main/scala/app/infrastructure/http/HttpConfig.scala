@@ -1,4 +1,4 @@
-package app.infrastructure.config.http
+package app.infrastructure.http
 
 import app.infrastructure.config.{AppConfigEnv, HttpConfigEnv}
 import pureconfig._

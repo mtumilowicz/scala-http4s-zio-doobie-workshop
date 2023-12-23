@@ -1,4 +1,4 @@
-package app.infrastructure.config.customer
+package app.infrastructure.customer
 
 import app.domain.customer._
 import app.domain.id.IdService

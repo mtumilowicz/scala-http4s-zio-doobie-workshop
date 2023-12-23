@@ -3,10 +3,10 @@ package app
 import app.domain.{ApiRepositoryEnv, ApiServiceEnv, InternalRepositoryEnv, InternalServiceEnv}
 import app.gateway.customer.CustomerController
 import app.infrastructure.config._
-import app.infrastructure.config.customer.CustomerConfig
-import app.infrastructure.config.db.{DatabaseConfig, DoobieConfig, FlywayConfig}
-import app.infrastructure.config.http.HttpConfig
-import app.infrastructure.config.id.IdConfig
+import app.infrastructure.customer.CustomerConfig
+import app.infrastructure.db.{DatabaseConfig, DoobieConfig, FlywayConfig}
+import app.infrastructure.http.HttpConfig
+import app.infrastructure.id.IdConfig
 import org.http4s.HttpRoutes
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -51,7 +51,7 @@ object Main extends App {
     ZIO.runtime[AppEnv]
       .flatMap { implicit runtime =>
         for {
-          appConfig <- getAppConfig
+          appConfig <- ZIO.service[AppConfig]
           HttpConfig(port, baseUrl) = appConfig.http
           databaseConfig = appConfig.database
           _ <- logging.log.info(s"Migrating db with flyway")
@@ -68,11 +68,11 @@ object Main extends App {
 
   }
 
-  def routes(baseUrl: String) =
+  private def routes(baseUrl: String) =
     Router[AppTask](
       customerHttp(baseUrl)
     ).orNotFound
 
-  def customerHttp(baseUrl: String): (String, HttpRoutes[AppTask]) =
+  private def customerHttp(baseUrl: String): (String, HttpRoutes[AppTask]) =
     "/customers" -> new CustomerController().routes(s"$baseUrl/customers")
 }

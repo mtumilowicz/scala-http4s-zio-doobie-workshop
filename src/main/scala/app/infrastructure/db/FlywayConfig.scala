@@ -1,4 +1,4 @@
-package app.infrastructure.config.db
+package app.infrastructure.db
 
 import org.flywaydb.core.Flyway
 import zio.Task
