@@ -446,63 +446,7 @@
         * `def assert[A](expr: => A)(assertion: Assertion[A]): TestResult`
 * mocking
     * more examples here: https://zio.dev/version-1.x/howto/mock-services/
-    * example
-        * suppose we would like to mock repository
-            ```
-            trait IdRepository extends Serializable {
-              def get: Task[String]
-            }
-            ```
-            that is used in the service
-            ```
-            case class IdService(provider: IdRepository) {
-              def generate(): Task[String] = provider.get
-            }
-            ```
-            and configured with a simple layer
-            ```
-            val service: URLayer[IdRepositoryEnv, IdServiceEnv] = {
-              for {
-                provider <- ZIO.service[IdRepository]
-              } yield IdService(provider)
-            }.toLayer
-            ```
-        * first: prepare the mock object and mock environment
-            ```
-            object IdRepositoryMock extends Mock[IdRepositoryEnv] {
-
-              object GetCommand extends Effect[Unit, Throwable, String]
-
-              val layer: URLayer[Has[Proxy], IdRepositoryEnv] =
-                ZLayer.fromService { proxy =>
-                  new IdRepository {
-                    override def get: Task[String] = proxy(GetCommand)
-                  }
-                }
-            }
-            ```
-            ```
-            val mockEnv: ULayer[IdRepositoryEnv] = ( // subsequent values of idRepository.get invocations
-              IdRepositoryMock.GetCommand(Expectation.value("test1")) ++
-                IdRepositoryMock.GetCommand(Expectation.value("test2"))
-              )
-            ```
-        * second: compose the layer for the service
-            ```
-            val layer: ZLayer[Any, Nothing, IdServiceEnv] = mockEnv >>> IdConfig.service
-            ```
-        * finally - test service with mocked repository
-            ```
-            override def spec =
-                suite("CustomerController")(
-                    testM("should delete all customers 2") {
-                      for {
-                       assert1 <- assertM(CustomerServiceProxy.get)(equalTo("test1"))
-                       assert2 <- assertM(CustomerServiceProxy.get)(equalTo("test2"))
-                      } yield assert1 && assert2
-                    }
-                ).provideSomeLayer[ZTestEnv](layer)
-            ```
+    * workshop: https://github.com/mtumilowicz/scala3-tapir-circe-iron-workshop
 
 ## http4s
 * `HttpRoutes[F] = Kleisli[OptionT[F, *], Request, Response]`
