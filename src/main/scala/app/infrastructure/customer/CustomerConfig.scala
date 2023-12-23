@@ -1,11 +1,9 @@
 package app.infrastructure.customer
 
 import app.domain.customer._
-import app.domain.id.IdService
-import app.domain.{ApiRepositoryEnv, InternalServiceEnv}
+import app.domain.id.{IdService, IdServiceEnv}
 import app.infrastructure.config.DoobieTransactorConfigEnv
-import app.infrastructure.customer.{CustomerDbRepository, CustomerInMemoryRepository}
-import zio.{URLayer, ZIO, ZLayer}
+import zio.{Has, URLayer, ZIO, ZLayer}
 
 object CustomerConfig {
 
@@ -15,7 +13,7 @@ object CustomerConfig {
   val dbRepository: ZLayer[DoobieTransactorConfigEnv, Throwable, CustomerRepositoryEnv] =
     CustomerDbRepository.live
 
-  val service: URLayer[InternalServiceEnv with ApiRepositoryEnv, CustomerServiceEnv] = {
+  val service: ZLayer[CustomerRepositoryEnv with IdServiceEnv, Nothing, Has[CustomerService]] = {
     for {
       service <- ZIO.service[IdService]
       repository <- ZIO.service[CustomerRepository]

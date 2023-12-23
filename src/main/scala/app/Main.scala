@@ -1,6 +1,7 @@
 package app
 
-import app.domain.{ApiRepositoryEnv, ApiServiceEnv, InternalRepositoryEnv, InternalServiceEnv}
+import app.domain.customer.{CustomerRepositoryEnv, CustomerServiceEnv}
+import app.domain.id.{IdRepositoryEnv, IdServiceEnv}
 import app.gateway.customer.CustomerController
 import app.infrastructure.config._
 import app.infrastructure.customer.CustomerConfig
@@ -25,10 +26,10 @@ object Main extends App {
     with HttpConfigEnv
     with DatabaseConfigEnv
     with DoobieTransactorConfigEnv
-    with InternalRepositoryEnv
-    with InternalServiceEnv
-    with ApiRepositoryEnv
-    with ApiServiceEnv
+    with IdRepositoryEnv
+    with IdServiceEnv
+    with CustomerRepositoryEnv
+    with CustomerServiceEnv
 
   type AppTask[A] = RIO[AppEnv, A]
 
