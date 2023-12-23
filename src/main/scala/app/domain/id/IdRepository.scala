@@ -2,6 +2,6 @@ package app.domain.id
 
 import zio.Task
 
-trait IdRepository extends Serializable {
+trait IdRepository {
   def get: Task[String]
 }

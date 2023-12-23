@@ -31,7 +31,7 @@ final private class CustomerDbRepository(xa: Transactor[Task]) extends CustomerR
       .orDie
       .map(rowsAffected => if (rowsAffected == 0) None else Some(id))
 
-  override def deleteAll: UIO[Unit] =
+  override def deleteAll(): UIO[Unit] =
     SQL.deleteAll.run
       .transact(xa)
       .unit

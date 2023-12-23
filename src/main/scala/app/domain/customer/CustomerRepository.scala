@@ -2,7 +2,7 @@ package app.domain.customer
 
 import zio.{Task, UIO}
 
-trait CustomerRepository extends Serializable {
+trait CustomerRepository {
 
   def getAll: fs2.Stream[Task, Customer]
 
@@ -10,7 +10,7 @@ trait CustomerRepository extends Serializable {
 
   def delete(id: CustomerId): UIO[Option[CustomerId]]
 
-  def deleteAll: UIO[Unit]
+  def deleteAll(): UIO[Unit]
 
   def create(customer: Customer): UIO[Customer]
 }

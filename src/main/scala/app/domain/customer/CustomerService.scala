@@ -14,8 +14,8 @@ case class CustomerService(idService: IdService, repository: CustomerRepository)
   def delete(id: CustomerId): UIO[Option[CustomerId]] =
       repository.delete(id)
 
-  def deleteAll: UIO[Unit] =
-    repository.deleteAll
+  def deleteAll(): UIO[Unit] =
+    repository.deleteAll()
 
   def create(command: NewCustomerCommand): Task[Customer] = {
     for {

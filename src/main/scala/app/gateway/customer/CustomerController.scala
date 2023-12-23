@@ -3,7 +3,6 @@ package app.gateway.customer
 import app.gateway.customer.in.NewCustomerApiInput
 import app.domain.customer._
 import app.gateway.customer.out.CustomerApiOutput
-import app.infrastructure.config.customer.CustomerServiceProxy
 import io.circe.syntax.EncoderOps
 import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
@@ -29,13 +28,13 @@ class CustomerController[R <: CustomerServiceEnv] {
     HttpRoutes.of[CustomerTask] {
       case GET -> Root / id =>
         for {
-          customer <- CustomerServiceProxy.getById(CustomerId(id))
+          customer <- ZIO.serviceWith[CustomerService](_.getById(CustomerId(id)))
           response <- customer.fold(NotFound())(x => Ok(CustomerApiOutput(rootUri, x)))
         } yield response
 
       case GET -> Root =>
         val pipeline: RIO[CustomerServiceEnv, fs2.Stream[CustomerTask, Customer]] =
-          CustomerServiceProxy.getAll
+          ZIO.service[CustomerService].map(_.getAll)
 //            .map(_.metered(FiniteDuration(2, TimeUnit.SECONDS)))
         for {
           stream <- pipeline
@@ -44,18 +43,17 @@ class CustomerController[R <: CustomerServiceEnv] {
 
       case req@POST -> Root =>
         req.decode[NewCustomerApiInput] { input =>
-          CustomerServiceProxy
-            .create(input.toDomain)
+          ZIO.serviceWith[CustomerService](_.create(input.toDomain))
             .map(CustomerApiOutput(rootUri, _))
             .flatMap(Created(_))
         }
 
       case DELETE -> Root / id =>
-        CustomerServiceProxy.delete(CustomerId(id))
+        ZIO.serviceWith[CustomerService](_.delete(CustomerId(id)))
           .flatMap(_.fold(NotFound())(_ => Ok(id)))
 
       case DELETE -> Root =>
-        CustomerServiceProxy.deleteAll *> Ok()
+        ZIO.serviceWith[CustomerService](_.deleteAll()) *> Ok()
     }
   }
 }
