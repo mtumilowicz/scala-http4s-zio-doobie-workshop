@@ -3,6 +3,7 @@ package app.gateway
 import _root_.app.gateway.HttpTestUtils.makeRequest
 import app.gateway.CustomerControllerSpec.CustomerTask
 import cats.data.Kleisli
+import cats.implicits.showInterpolator
 import io.circe.Json
 import org.http4s.circe.jsonEncoder
 import org.http4s.{Method, Request, Response}
@@ -25,13 +26,13 @@ object CustomerLifecycle {
   }
 
   def getById(id: String)(implicit app: AppEndpoints): CustomerTask[Response[CustomerTask]] = {
-    val request = makeRequest[CustomerTask](Method.GET, s"/$id")
+    val request = makeRequest[CustomerTask](Method.GET, show"/$id")
 
     app.run(request)
   }
 
   def deleteById(id: String)(implicit app: AppEndpoints): CustomerTask[Response[CustomerTask]] = {
-    val request = makeRequest[CustomerTask](Method.DELETE, s"/$id")
+    val request = makeRequest[CustomerTask](Method.DELETE, show"/$id")
 
     app.run(request)
   }

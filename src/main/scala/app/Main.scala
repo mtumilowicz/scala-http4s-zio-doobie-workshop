@@ -8,6 +8,7 @@ import app.infrastructure.customer.CustomerConfig
 import app.infrastructure.db.{DatabaseConfig, DoobieConfig, FlywayConfig}
 import app.infrastructure.http.HttpConfig
 import app.infrastructure.id.IdConfig
+import cats.implicits.showInterpolator
 import org.http4s.HttpRoutes
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -55,9 +56,9 @@ object Main extends App {
           appConfig <- ZIO.service[AppConfig]
           HttpConfig(port, baseUrl) = appConfig.http
           databaseConfig = appConfig.database
-          _ <- logging.log.info(s"Migrating db with flyway")
+          _ <- logging.log.info(show"Migrating db with flyway")
           _ <- FlywayConfig.initDb(databaseConfig)
-          _ <- logging.log.info(s"Starting with $baseUrl")
+          _ <- logging.log.info(show"Starting with $baseUrl")
           _ <- BlazeServerBuilder.apply[AppTask](runtime.platform.executor.asEC)
             .bindHttp(port, "0.0.0.0")
             .withHttpApp(routes(baseUrl))
@@ -75,5 +76,5 @@ object Main extends App {
     ).orNotFound
 
   private def customerHttp(baseUrl: String): (String, HttpRoutes[AppTask]) =
-    "/customers" -> new CustomerController().routes(s"$baseUrl/customers")
+    "/customers" -> new CustomerController().routes(show"$baseUrl/customers")
 }

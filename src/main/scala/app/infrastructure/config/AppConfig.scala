@@ -2,6 +2,7 @@ package app.infrastructure.config
 
 import app.infrastructure.db.DatabaseConfig
 import app.infrastructure.http.HttpConfig
+import cats.implicits.showInterpolator
 import pureconfig._
 import pureconfig.generic.semiauto._
 import zio._
@@ -18,7 +19,7 @@ object AppConfig {
         .fromEither(ConfigSource.default.load[AppConfig])
         .mapError(failures =>
           new IllegalStateException(
-            s"Error loading configuration: $failures"
+            show"Error loading configuration: ${failures.prettyPrint()}"
           )
         )
     }
