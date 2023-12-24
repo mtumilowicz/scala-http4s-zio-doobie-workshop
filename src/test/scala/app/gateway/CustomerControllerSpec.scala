@@ -50,7 +50,6 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
       val expectedResponse = Some(
         json"""{
             "id": "1",
-            "url": "/1",
             "name": "Test",
             "locked":false
           }""")
@@ -58,7 +57,9 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
       for {
         response <- CustomerLifecycle.create(json"""{"name": "Test"}""")
         bodyCheckResult <- checkBody(response, expectedResponse)
-      } yield checkStatus(response, Status.Created) && bodyCheckResult
+      } yield checkHeader(response, Header("localization", "/1")) &&
+        checkStatus(response, Status.Created) &&
+        bodyCheckResult
     }
 
   lazy val createNewCustomerThenQueryTest =
@@ -66,7 +67,6 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
       val expectedResponse = Some(
         json"""{
             "id": "1",
-            "url": "/1",
             "name": "Test",
             "locked":false
           }""")
@@ -90,8 +90,8 @@ object CustomerControllerSpec extends DefaultRunnableSpec {
     testM("create two customers and then get all customers") {
       val expectedResponse = Some(
         json"""[
-              {"id": "1", "url": "/1", "name": "Test", "locked":false},
-              {"id": "2", "url": "/2", "name": "Test2", "locked":false}
+              {"id": "1", "name": "Test", "locked":false},
+              {"id": "2", "name": "Test2", "locked":false}
             ]"""
       )
 

@@ -13,11 +13,15 @@ object HttpTestUtils {
                      uri: String
                    ): Request[F] = Request(method = method, uri = Uri.fromString(uri).toOption.get)
 
-  def checkStatus[R, A](
+  def checkStatus[R](
                          response: Response[RIO[R, *]],
                          expectedStatus: Status
                        ): TestResult = {
     assert(response.status)(equalTo(expectedStatus))
+  }
+
+  def checkHeader[R](response: Response[RIO[R, *]], header: Header.Raw): TestResult = {
+    assert(response.headers.toList)(contains(header))
   }
 
   def checkBody[R, A](
