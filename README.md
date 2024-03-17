@@ -36,6 +36,7 @@
     * https://tpolecat.github.io/
     * https://github.com/scalalandio/chimney
     * https://scalalandio.github.io/chimney/
+    * [Keynote: Daniel Spiewak - The Case For Effect Systems](https://www.youtube.com/watch?v=qgfCmQ-2tW0)
 
 ## preface
 * goals of this workshop
@@ -97,6 +98,25 @@
     * a better `Future`
         * referentially transparent
             * doesn't produce effects - it describe effects
+            * easier to refactor
+                ```
+                for {
+                   x <- foo()
+                   y <- bar(x)
+                   _ <- baz()
+                   z <- qux(x, y)
+                } yield ...
+                ```
+                moving `baz` out of for-comprehension does not change semantics
+                ```
+                val bz = baz()
+                for {
+                   x <- foo()
+                   y <- bar(x)
+                   _ <- bz
+                   z <- qux(x, y)
+                } yield ...
+                ```
         * lazy
             * when created - `Future` is already running
                 * example: `Future { Thread.sleep(2_000); 1 }`
