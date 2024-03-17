@@ -98,7 +98,7 @@
     * a better `Future`
         * referentially transparent
             * doesn't produce effects - it describe effects
-            * easier to refactor
+            * easier to refactor - with `Future` simple refactoring can dramatically change program meaning
                 ```
                 for {
                    x <- foo()
