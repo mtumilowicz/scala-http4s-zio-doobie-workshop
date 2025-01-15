@@ -225,7 +225,6 @@
         * If the first effect fails (in this case: if the player’s name is invalid), the second effect is executed (in this case: an error message is displayed and then getName is called again).
 * monad transformers equivalent
     * for `Option`
-        *
     * for `Either`
     * example
         ```
@@ -302,7 +301,7 @@
     * is the closest analogy to `Future`
         * if we see fiber it is probably doing something or already evaluated
              * if it is not doing active work and can't do active work - will be garbage collected
-                   * you don't have to take care of explicitly shutting them down
+                * you don't have to take care of explicitly shutting them down
         * no start method, as soon as fiber is created it is started as well
     * it’s up to the ZIO runtime to schedule fibers for execution (on the internal JVM thread pool)
         * ZIO executes fibers using an Executor (abstraction over a thread pool)
