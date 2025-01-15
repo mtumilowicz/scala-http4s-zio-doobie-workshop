@@ -109,7 +109,7 @@
                 ```
                 moving `baz` out of for-comprehension does not change semantics
                 ```
-                val bz = baz()
+                val bz = baz() // it is executed before for-comprehension
                 for {
                    x <- foo()
                    y <- bar(x)
